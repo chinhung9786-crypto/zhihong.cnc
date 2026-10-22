@@ -184,7 +184,6 @@
         </button>
       </div>
 
-      <!-- 客戶即時搜尋與計數 -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div class="sm:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center gap-2">
           <i class="ph ph-magnifying-glass text-slate-400 text-lg ml-2"></i>
@@ -196,7 +195,6 @@
         </div>
       </div>
 
-      <!-- 客戶詳細檔案卡片列表 -->
       <div id="clients-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4"></div>
     </section>
 
@@ -266,10 +264,10 @@
   </main>
 
   <!-- ==============================================================
-       彈窗 MODALS (全部獨立補齊，絕不卡死)
+       彈窗 MODALS
   ============================================================== -->
   
-  <!-- 1. 建立工單 (可就地新增材質、新增客戶) -->
+  <!-- 1. 建立工單 -->
   <div id="new-order-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -330,7 +328,7 @@
     </div>
   </div>
 
-  <!-- 2. 完整客戶建檔彈窗 (CRM 規格) -->
+  <!-- 2. 客戶建檔彈窗 (CRM 規格) -->
   <div id="add-client-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-blue-600 w-full max-w-lg rounded-2xl p-5 space-y-3 text-xs sm:text-sm max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
@@ -360,7 +358,7 @@
           <div><label class="block text-slate-400 mb-1">付款條件</label><input type="text" id="client-payment" placeholder="例：月結 60 天" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-mono"></div>
         </div>
 
-        <div><label class="block text-slate-400 mb-1">送貨地址 / 工廠廠區</label><input type="text" id="client-address" placeholder="例：新竹科學園區研發一路..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
+        <div><label class="block text-slate-400 mb-1">送貨地址 / 工廠廠區</label><input type="text" id="client-address" placeholder="例：新竹市東區科學園區研發一路..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
         <div><label class="block text-slate-400 mb-1">加工慣例 / 品檢出貨特別備註</label><textarea id="client-notes" rows="2" placeholder="例：交貨需附材質證明與三次元量測報告；螺紋需塞規全檢。" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-white"></textarea></div>
 
         <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
@@ -371,7 +369,7 @@
     </div>
   </div>
 
-  <!-- 3. 自訂材質規格彈窗 (增設) -->
+  <!-- 3. 自訂材質規格彈窗 -->
   <div id="add-material-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-cyan-600 w-full max-w-md rounded-2xl p-5 space-y-3 text-xs sm:text-sm">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -401,7 +399,7 @@
     </div>
   </div>
 
-  <!-- 4. 自訂外包項目彈窗 (增設) -->
+  <!-- 4. 自訂外包項目彈窗 -->
   <div id="add-process-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-purple-600 w-full max-w-md rounded-2xl p-5 space-y-3 text-xs sm:text-sm">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -428,7 +426,7 @@
     </div>
   </div>
 
-  <!-- 5. 新增外包廠彈窗 -->
+  <!-- 5. 新增外包廠彈窗 (純淨手動新增) -->
   <div id="add-vendor-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-purple-600 w-full max-w-md rounded-2xl p-5 space-y-3 text-xs sm:text-sm">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -436,7 +434,7 @@
         <button onclick="closeModal('add-vendor-modal')" class="text-slate-400"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
       <form onsubmit="handleSaveVendor(event)" class="space-y-3">
-        <div><label class="block text-slate-400 mb-1">協力廠名稱 *</label><input type="text" id="vendor-name" required placeholder="例：順捷精密陽極廠" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
+        <div><label class="block text-slate-400 mb-1">協力廠名稱 *</label><input type="text" id="vendor-name" required placeholder="例：大同精密研磨廠" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
         <div>
           <label class="block text-slate-400 mb-1">主營類別</label>
           <select id="vendor-type" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white">
@@ -456,7 +454,7 @@
     </div>
   </div>
 
-  <!-- 6. 登記送外包彈窗 (含自訂外包項目與廠商快捷鍵) -->
+  <!-- 6. 登記送外包彈窗 -->
   <div id="dispatch-outsource-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-purple-800 w-full max-w-lg rounded-2xl p-5 space-y-3 text-xs sm:text-sm max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -546,8 +544,8 @@
     let currentClientFilter = 'ALL';
     let currentWorkerOrderId = null;
 
-    // 1. 完整客戶資料庫 (預設示範清單，支援 CRM 完整欄位)
-    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v12')) || [
+    // 1. 客戶資料庫 (CRM 規格)
+    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v13')) || [
       {
         id: "C001",
         name: "均豪精密工業股份有限公司",
@@ -561,8 +559,8 @@
       }
     ];
 
-    // 2. 自訂材質庫 (含 SS440、SUS420、SUS430、SUS630、POM 等)
-    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v12')) || [
+    // 2. 自訂材質規格
+    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v13')) || [
       { category: "碳鋼 / 合金鋼", name: "S45C (中碳鋼)" },
       { category: "碳鋼 / 合金鋼", name: "SS440 (中碳板)" },
       { category: "碳鋼 / 合金鋼", name: "SS400 (一般結構鋼)" },
@@ -579,14 +577,11 @@
       { category: "模具鋼 / 工具鋼", name: "SKD11 (冷作模具鋼)" }
     ];
 
-    // 3. 自訂外包協力廠商庫
-    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v12')) || [
-      { name: "順捷精密陽極廠", type: "表面處理/熱處理", contact: "林廠長", phone: "03-368xxxx" },
-      { name: "億順慢走絲線切割", type: "發包加工/機械協力", contact: "王老闆", phone: "03-361xxxx" }
-    ];
+    // 3. 外包協力廠商庫 (已清空預設名單，起始為 0 家)
+    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v13')) || [];
 
-    // 4. 自訂外包加工/表面處理項目庫
-    let outsourceProcesses = JSON.parse(localStorage.getItem('zh_cnc_processes_v12')) || [
+    // 4. 外包加工/表面處理項目庫
+    let outsourceProcesses = JSON.parse(localStorage.getItem('zh_cnc_processes_v13')) || [
       { type: "表面處理 / 熱處理", name: "陽極處理 (本色霧面)" },
       { type: "表面處理 / 熱處理", name: "硬質陽極 (硬陽 30μm / 膜厚管控)" },
       { type: "表面處理 / 熱處理", name: "黑色陽極處理 (消光/光澤)" },
@@ -600,7 +595,6 @@
       { type: "發包加工 / 機械協力", name: "雷射鈑金割折與組焊退火" }
     ];
 
-    // 基礎彈窗工具
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function showNotification(title, msg) {
@@ -619,7 +613,7 @@
       refreshOutsourceProcessDropdown();
       renderClientsView();
       fetchCloudData();
-      setInterval(() => fetchCloudData(false), 30000); // 每 30 秒自動背景輪詢
+      setInterval(() => fetchCloudData(false), 30000);
     });
 
     // 雲端資料同步 (Google Apps Script)
@@ -627,7 +621,7 @@
       const badge = document.getElementById('cloud-badge');
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請將剛才複製')) {
         if (showToast) showNotification("本地運作模式", "尚未填入 Google 網址，系統正使用本機快取運行。");
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v12')) || [];
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v13')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -642,16 +636,16 @@
         const data = await response.json();
         
         orders = data.map(row => ({
-          id: row["工單號碼"] || row["id"],
-          partName: row["零件名稱"] || row["part_name"],
-          customer: row["客戶名稱"] || row["customer"],
-          material: row["材質規格"] || row["material"],
-          machine: row["加工機台"] || row["machine"],
+          id: String(row["工單號碼"] || row["id"]).trim(),
+          partName: row["零件名稱"] || row["part_name"] || "零件",
+          customer: row["客戶名稱"] || row["customer"] || "",
+          material: row["材質規格"] || row["material"] || "",
+          machine: row["加工機台"] || row["machine"] || "",
           targetQty: parseInt(row["目標數量"] || row["target_qty"]) || 1,
-          dueDate: row["交貨日期"] || row["due_date"],
+          dueDate: row["交貨日期"] || row["due_date"] || "",
           revision: row["版本"] || row["revision"] || "Rev.A",
           status: row["目前狀態"] || row["status"] || "待加工",
-          statusTime: row["更新時間"] || row["status_time"],
+          statusTime: row["更新時間"] || row["status_time"] || "",
           notes: row["備註"] || "",
           completionData: typeof row["完工/自檢資料"] === 'string' && row["完工/自檢資料"] ? JSON.parse(row["完工/自檢資料"]) : row["完工/自檢資料"],
           outsourceData: typeof row["外包資料"] === 'string' && row["外包資料"] ? JSON.parse(row["外包資料"]) : row["外包資料"],
@@ -666,10 +660,10 @@
         renderShopfloorView();
         renderQualityView();
         renderOutsourceBoard();
-        if (showToast) showNotification("同步成功", "已取得 Google 試算表最新工單！");
+        if (showToast) showNotification("同步成功", "已取得最新工單！");
       } catch (err) {
         console.warn("Google 雲端讀取失敗，使用本地備用:", err);
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v12')) || [];
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v13')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -683,7 +677,7 @@
       btn.innerText = "寫入中...";
       btn.disabled = true;
 
-      const orderNo = document.getElementById('form-order-no').value.trim();
+      const orderNo = String(document.getElementById('form-order-no').value).trim();
       const newOrder = {
         id: orderNo,
         partName: document.getElementById('form-part-name').value.trim(),
@@ -700,7 +694,7 @@
 
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請將剛才複製')) {
         orders.unshift(newOrder);
-        localStorage.setItem('zh_cnc_local_orders_v12', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v13', JSON.stringify(orders));
         closeModal('new-order-modal');
         document.getElementById('new-order-form').reset();
         renderOfficeBoard();
@@ -736,7 +730,7 @@
       btn.disabled = true;
 
       const form = document.getElementById('completion-form');
-      const orderId = form.dataset.orderId;
+      const orderId = String(form.dataset.orderId).trim();
       const goodQty = parseInt(document.getElementById('complete-ok-qty').value) || 0;
       const defectQty = parseInt(document.getElementById('complete-ng-qty').value) || 0;
       const operator = document.getElementById('complete-operator').value;
@@ -745,7 +739,7 @@
       const newStatus = nextStep === 'OUTSOURCE' ? '外包中' : '已完成';
 
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請將剛才複製')) {
-        const o = orders.find(x => x.id === orderId);
+        const o = orders.find(x => String(x.id).trim() === orderId);
         if (o) {
           o.status = newStatus;
           o.completionData = { goodQty, defectQty, operator };
@@ -753,10 +747,11 @@
             if(!o.defectLogs) o.defectLogs = [];
             o.defectLogs.push({ machine: o.machine, defectQty, reason: reason||"未指定原因", operator, reportedAt: new Date().toLocaleString('zh-TW', {hour12:false}) });
           }
-          localStorage.setItem('zh_cnc_local_orders_v12', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v13', JSON.stringify(orders));
         }
         closeModal('completion-modal');
         renderOfficeBoard();
+        populateWorkerOrderSelector();
         renderShopfloorView();
         renderQualityView();
         btn.innerText = "送出並同步";
@@ -785,9 +780,7 @@
       }
     }
 
-    // ==========================================
-    // 功能 1：完整客戶資料維護 (CRM 規格)
-    // ==========================================
+    // 客戶管理
     function openAddClientModal() {
       document.getElementById('client-edit-id').value = "";
       document.getElementById('client-code').value = "C" + String(clients.length + 1).padStart(3, '0');
@@ -824,7 +817,7 @@
         clients.push(clientData);
       }
 
-      localStorage.setItem('zh_cnc_clients_v12', JSON.stringify(clients));
+      localStorage.setItem('zh_cnc_clients_v13', JSON.stringify(clients));
       closeModal('add-client-modal');
       refreshCustomerSelectDropdown();
       refreshBoardClientFilter();
@@ -897,7 +890,7 @@
     function deleteClient(id) {
       if(confirm("確定要刪除此客戶檔案嗎？")) {
         clients = clients.filter(c => c.id !== id);
-        localStorage.setItem('zh_cnc_clients_v12', JSON.stringify(clients));
+        localStorage.setItem('zh_cnc_clients_v13', JSON.stringify(clients));
         refreshCustomerSelectDropdown();
         refreshBoardClientFilter();
         renderClientsView();
@@ -939,9 +932,7 @@
       });
     }
 
-    // ==========================================
-    // 功能 2：自訂材質規格維護
-    // ==========================================
+    // 材質規格管理
     function openAddMaterialModal() {
       document.getElementById('custom-mat-name').value = '';
       openModal('add-material-modal');
@@ -958,7 +949,7 @@
       }
 
       materials.push({ category: cat, name: name });
-      localStorage.setItem('zh_cnc_materials_v12', JSON.stringify(materials));
+      localStorage.setItem('zh_cnc_materials_v13', JSON.stringify(materials));
       closeModal('add-material-modal');
       refreshMaterialDropdown();
 
@@ -991,9 +982,7 @@
       });
     }
 
-    // ==========================================
-    // 功能 3：自訂外包處理項目與外包廠維護
-    // ==========================================
+    // 外包自訂項目與廠商管理 (清空內建名單)
     function openAddProcessModal() {
       document.getElementById('custom-proc-name').value = '';
       openModal('add-process-modal');
@@ -1010,7 +999,7 @@
       }
 
       outsourceProcesses.push({ type: type, name: name });
-      localStorage.setItem('zh_cnc_processes_v12', JSON.stringify(outsourceProcesses));
+      localStorage.setItem('zh_cnc_processes_v13', JSON.stringify(outsourceProcesses));
       closeModal('add-process-modal');
       refreshOutsourceProcessDropdown();
 
@@ -1058,7 +1047,7 @@
       const phone = document.getElementById('vendor-phone').value.trim();
 
       vendors.push({ name, type, contact, phone });
-      localStorage.setItem('zh_cnc_vendors_v12', JSON.stringify(vendors));
+      localStorage.setItem('zh_cnc_vendors_v13', JSON.stringify(vendors));
       closeModal('add-vendor-modal');
       refreshOutsourceVendorDropdown();
 
@@ -1072,7 +1061,7 @@
       if (!select) return;
       select.innerHTML = '';
       if (vendors.length === 0) {
-        select.innerHTML = '<option value="">請點擊上方「＋ 新增廠商」建立</option>';
+        select.innerHTML = '<option value="">尚無廠商，請點擊右上方「新增廠商」建立</option>';
         return;
       }
       vendors.forEach(v => {
@@ -1104,7 +1093,7 @@
 
     async function handleConfirmDispatchOutsource(e) {
       e.preventDefault();
-      const orderId = document.getElementById('outsource-order-select').value;
+      const orderId = String(document.getElementById('outsource-order-select').value).trim();
       const vendor = document.getElementById('outsource-vendor').value;
       const process = document.getElementById('outsource-process').value;
       const qty = parseInt(document.getElementById('outsource-qty').value) || 10;
@@ -1116,14 +1105,16 @@
       const outData = { vendor, process, sentQty: qty, expectedDate, specs, sentDate: new Date().toISOString().split('T')[0] };
 
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請將剛才複製')) {
-        const o = orders.find(x => x.id === orderId);
+        const o = orders.find(x => String(x.id).trim() === orderId);
         if (o) {
           o.status = "外包中";
           o.outsourceData = outData;
-          localStorage.setItem('zh_cnc_local_orders_v12', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v13', JSON.stringify(orders));
         }
         closeModal('dispatch-outsource-modal');
         renderOfficeBoard();
+        populateWorkerOrderSelector();
+        renderShopfloorView();
         renderOutsourceBoard();
         showNotification("外包單已登記", `工單 ${orderId} 已發往 ${vendor}`);
         return;
@@ -1138,9 +1129,10 @@
       fetchCloudData(false);
     }
 
-    // 看板繪製與流轉
+    // 看板繪製
     function renderOfficeBoard() {
       const grid = document.getElementById('orders-grid');
+      if (!grid) return;
       grid.innerHTML = '';
 
       const activeList = orders.filter(o => !o.isArchived);
@@ -1195,36 +1187,72 @@
     }
 
     function toggleArchive(id) {
-      const o = orders.find(x => x.id === id);
+      const o = orders.find(x => String(x.id).trim() === String(id).trim());
       if (o) {
         o.isArchived = !o.isArchived;
-        localStorage.setItem('zh_cnc_local_orders_v12', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v13', JSON.stringify(orders));
         renderOfficeBoard();
+        populateWorkerOrderSelector();
+        renderShopfloorView();
         showNotification(o.isArchived?"已移至歷史封存":"已移回在製看板", `工單 ${id} 狀態已變更。`);
       }
     }
 
-    // 師傅端介面
+    // 師傅端介面 (全防呆型別配對)
     function populateWorkerOrderSelector() {
       const s = document.getElementById('worker-order-selector');
+      if (!s) return;
       s.innerHTML = '';
       const list = orders.filter(o => !o.isArchived);
+      
+      if (list.length === 0) {
+        s.innerHTML = '<option value="">目前無在製工單</option>';
+        currentWorkerOrderId = null;
+        return;
+      }
+
       list.forEach(o => {
         const opt = document.createElement('option');
-        opt.value = o.id; opt.innerText = `${o.id} - ${o.partName} [${o.status}]`;
-        if (o.id === currentWorkerOrderId) opt.selected = true;
+        opt.value = String(o.id).trim();
+        opt.innerText = `${o.id} - ${o.partName} [${o.status}]`;
+        if (String(o.id).trim() === String(currentWorkerOrderId).trim()) opt.selected = true;
         s.appendChild(opt);
       });
-      if (!currentWorkerOrderId && list.length > 0) currentWorkerOrderId = list[0].id;
+
+      // 若目前選取的工單不在清單內，預設選取第一張
+      if (!currentWorkerOrderId || !list.some(o => String(o.id).trim() === String(currentWorkerOrderId).trim())) {
+        currentWorkerOrderId = String(list[0].id).trim();
+        s.value = currentWorkerOrderId;
+      }
     }
 
-    function onWorkerSelectOrder(id) { currentWorkerOrderId = id; renderShopfloorView(); }
+    function onWorkerSelectOrder(id) {
+      currentWorkerOrderId = String(id).trim();
+      renderShopfloorView();
+    }
 
     function renderShopfloorView() {
       const c = document.getElementById('shopfloor-content');
+      if (!c) return;
       c.innerHTML = '';
-      const o = orders.find(x => x.id === currentWorkerOrderId);
-      if (!o) return;
+
+      if (!currentWorkerOrderId) {
+        c.innerHTML = `
+          <div class="p-16 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800">
+            <i class="ph ph-wrench text-5xl mb-2 text-slate-600 block"></i>
+            <p class="text-base font-bold text-slate-300">現場目前無任何工單可進行加工</p>
+            <p class="text-xs text-slate-500 mt-1">請等待辦公室發布工程圖面工單</p>
+          </div>
+        `;
+        return;
+      }
+
+      const o = orders.find(x => String(x.id).trim() === String(currentWorkerOrderId).trim());
+      if (!o) {
+        c.innerHTML = `<div class="p-8 text-center text-slate-500">工單載入中，請稍候...</div>`;
+        return;
+      }
+
       c.innerHTML = `
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -1236,7 +1264,7 @@
             <span class="text-sm px-3 py-1 rounded-full font-bold bg-slate-800 text-cyan-300 border border-slate-700">${o.status}</span>
           </div>
           <div class="blueprint-grid rounded-xl p-8 text-center text-cyan-400 font-mono text-sm border border-slate-800">
-            [ 2D 精密工程圖面視圖 - 材質：${o.material} / 目標件數：${o.targetQty} PCS ]
+            [ 2D 精密工程圖面尺寸視圖 - 材質：${o.material} / 目標件數：${o.targetQty} PCS ]
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-300">
             <span class="text-amber-400 font-bold block mb-1">辦公室公差要求：</span>${o.notes || '依工程圖面規格施作。'}
@@ -1250,9 +1278,10 @@
     }
 
     async function workerQuickStatus(id, st) {
+      const orderId = String(id).trim();
       showNotification("同步中", "正在更新狀態至 Google 雲端...");
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請將剛才複製')) {
-        const o = orders.find(x => x.id === id);
+        const o = orders.find(x => String(x.id).trim() === orderId);
         if (o) o.status = st;
         renderShopfloorView();
         renderOfficeBoard();
@@ -1260,13 +1289,14 @@
       }
       await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: "update_status", orderId: id, status: st })
+        body: JSON.stringify({ action: "update_status", orderId: orderId, status: st })
       });
       fetchCloudData(false);
     }
 
     function openCompletionModal(id) {
-      document.getElementById('completion-form').dataset.orderId = id;
+      const form = document.getElementById('completion-form');
+      form.dataset.orderId = String(id).trim();
       openModal('completion-modal');
     }
 
@@ -1283,7 +1313,10 @@
           "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white whitespace-nowrap";
       });
       if (view === 'office') renderOfficeBoard();
-      if (view === 'shopfloor') renderShopfloorView();
+      if (view === 'shopfloor') {
+        populateWorkerOrderSelector();
+        renderShopfloorView();
+      }
       if (view === 'clients') renderClientsView();
       if (view === 'quality') renderQualityView();
       if (view === 'outsource') renderOutsourceBoard();
@@ -1294,6 +1327,7 @@
 
     function renderQualityView() {
       const b = document.getElementById('qc-defect-table-body');
+      if (!b) return;
       b.innerHTML = '';
       orders.forEach(o => {
         if (o.completionData && o.completionData.defectQty > 0) {
@@ -1305,27 +1339,26 @@
 
     function renderOutsourceBoard() {
       const b = document.getElementById('outsource-table-body');
+      if (!b) return;
       b.innerHTML = '';
-      const today = new Date().toISOString().split('T')[0];
       orders.filter(o => o.status === '外包中').forEach(o => {
         const d = o.outsourceData || {};
-        const isOverdue = d.expectedDate && d.expectedDate < today;
         b.innerHTML += `<tr>
           <td class="p-3 text-cyan-400 font-mono">${o.id}<div class="text-[11px] text-slate-300 font-sans">${o.partName}</div></td>
           <td class="p-3">${o.customer}</td>
-          <td class="p-3 font-bold text-white">${d.vendor || '--'}</td>
-          <td class="p-3"><span class="text-purple-300 font-bold block">${d.process || '--'}</span><span class="text-[10px] text-slate-400">${d.specs || ''}</span></td>
+          <td class="p-3 font-bold text-white">${d.vendor || '外包廠'}</td>
+          <td class="p-3 text-purple-300">${d.process || '表面處理'}</td>
           <td class="p-3 font-mono">${d.sentQty || o.targetQty} PCS</td>
           <td class="p-3 font-mono text-slate-400">${d.sentDate || '--'}</td>
-          <td class="p-3 font-mono font-bold ${isOverdue?'text-rose-400 animate-pulse':'text-amber-300'}">${d.expectedDate || '--'}${isOverdue?' <span class="text-[9px] bg-rose-950 text-rose-300 px-1 py-0.2 rounded border border-rose-800">逾期未回</span>':''}</td>
+          <td class="p-3 font-mono text-amber-300 font-bold">${d.expectedDate || o.dueDate}</td>
           <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-purple-950 text-purple-300 border border-purple-800">外包中</span></td>
-          <td class="p-3 text-right"><button onclick="workerQuickStatus('${o.id}', '已完成')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs">驗收入庫</button></td>
+          <td class="p-3 text-right"><button onclick="workerQuickStatus('${o.id}', '已完成')" class="px-3 py-1 bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs">驗收入庫</button></td>
         </tr>`;
       });
       if (!b.innerHTML) b.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">目前尚無外包處理中工單</td></tr>`;
     }
 
-    // 匯出 CSV
+    // 匯出 CSV 功能
     function exportCompletedOrdersCSV() {
       const list = orders.filter(o => o.status === '已完成' || o.isArchived);
       if (list.length === 0) { alert("無完工工單可匯出！"); return; }
@@ -1348,16 +1381,12 @@
     function downloadCSV(content, filename) {
       const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-      showNotification("報表已下載", `檔案【${filename}】已下載，可存放於 D:\\CNC_Data 目錄備份。`);
+      showNotification("報表已下載", `檔案【${filename}】已存檔，可存放於 D:\\CNC_Data 目錄備份。`);
     }
     function clearAllData() {
       if(confirm("確定要清空所有資料嗎？")) {
         localStorage.clear();
         orders = [];
-        clients = [];
-        vendors = [];
-        materials = [];
-        outsourceProcesses = [];
         location.reload();
       }
     }
