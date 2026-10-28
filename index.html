@@ -68,12 +68,11 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
 
   <script>
-    // 系統通用配置
     const GOOGLE_SCRIPT_URL = '請將剛才複製的Google_Apps_Script網址貼在此處';
     const DEFAULT_SYSTEM_PASSWORD = 'zh2026';
   </script>
 
-  <!-- 全域安全密碼鎖定遮罩 -->
+  <!-- 全域安全密碼鎖定遮罩 (升級版：含防呆與一鍵救援重設) -->
   <div id="auth-lock-overlay" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-4">
     <div class="bg-slate-900 border-2 border-cyan-500/80 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
       <div class="w-16 h-16 bg-cyan-950 border border-cyan-500 text-cyan-400 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-lg shadow-cyan-500/20">
@@ -84,13 +83,18 @@
         <p class="text-xs text-slate-400 mt-1">請輸入廠內通關密碼以解鎖系統</p>
       </div>
       <form onsubmit="handleVerifyPassword(event)" class="space-y-3">
-        <input type="password" id="input-sys-pwd" required placeholder="請輸入廠內通關密碼" 
+        <input type="text" id="input-sys-pwd" required placeholder="請輸入 zh2026" autocomplete="off"
                class="w-full bg-slate-950 border-2 border-slate-700 focus:border-cyan-500 rounded-xl px-4 py-3 text-center text-white tracking-widest text-lg outline-none font-mono">
         <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/30 tactile-btn text-sm">
           確認登入解鎖
         </button>
       </form>
-      <div id="pwd-error-msg" class="hidden text-xs text-rose-400 font-bold">密碼錯誤，請洽詢辦公室管理者！</div>
+      <div id="pwd-error-msg" class="hidden text-xs text-rose-400 font-bold">密碼錯誤，請檢查大小寫！</div>
+      <div class="pt-2 border-t border-slate-800">
+        <button type="button" onclick="emergencyResetPassword()" class="text-[11px] text-cyan-400 hover:underline">
+          <i class="ph ph-arrow-counter-clockwise"></i> 忘記或卡住？點此一鍵還原為預設密碼 (zh2026)
+        </button>
+      </div>
     </div>
   </div>
 
@@ -165,7 +169,7 @@
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
         <div>
           <h1 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">誌宏機械 · 全廠工單圖面與流轉總覽</h1>
-          <p class="text-xs text-slate-400 mt-0.5">管控工程圖面版次、機台報工，完工工單可直接點擊開立中一刀銷貨單。</p>
+          <p class="text-xs text-slate-400 mt-0.5">管控工程圖面版次、機台報工，完工工單可直接點擊開立中一刀銷貨單[cite: 4]。</p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <button onclick="exportCompletedOrdersCSV()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm tactile-btn flex items-center justify-center gap-1.5 shadow">
@@ -363,7 +367,6 @@
        ★ 中一刀三聯銷貨單列印容器 (寬度 195mm 內縮防撞孔、固定外框與大簽章) ★
   ============================================================== -->
   <div id="printable-invoice-sheet" class="hidden font-sans text-black bg-white select-none">
-    <!-- 單據抬頭 (整體上移) -->
     <div class="flex justify-between items-start border-b border-black pb-1 mb-1">
       <div>
         <h1 class="text-lg font-black tracking-wider leading-tight">誌宏機械有限公司</h1>
@@ -382,7 +385,6 @@
       </div>
     </div>
 
-    <!-- 客戶基本資料欄 (上移緊湊) -->
     <div class="grid grid-cols-2 text-[10.5px] leading-tight border border-black p-1.5 mb-1 bg-white">
       <div>
         <div>客戶名稱：<strong id="inv-print-client-name">--</strong></div>
@@ -396,7 +398,6 @@
       </div>
     </div>
 
-    <!-- 品名規格表格 (固定外框高度，自動補齊 6 行) -->
     <table class="invoice-table text-[10.5px] mb-1">
       <thead>
         <tr class="bg-gray-100 text-center font-bold">
@@ -409,7 +410,6 @@
       <tbody id="inv-print-items-body"></tbody>
     </table>
 
-    <!-- 數量總計與金額小計欄 (鎖定下緣) -->
     <div class="border border-black px-2 py-1 text-[11px] font-mono flex justify-between items-center mb-1">
       <div>數量總計：<strong id="inv-print-total-qty">0</strong> PCS</div>
       <div>合 &nbsp; 計：<span id="inv-print-subtotal">0</span> 元</div>
@@ -417,7 +417,6 @@
       <div>總 &nbsp; 計：<strong id="inv-print-grand-total" class="text-sm">0</strong> 元</div>
     </div>
 
-    <!-- 備註與客戶簽章 (加大好蓋章、備註留白) -->
     <div class="grid grid-cols-12 border border-black" style="height: 22mm;">
       <div class="col-span-7 p-1.5 border-r border-black flex flex-col justify-between text-[10.5px]">
         <div class="font-bold">備註：<span id="inv-print-notes" class="font-normal"></span></div>
@@ -748,7 +747,7 @@
   </div>
 
   <!-- ==============================================================
-       核心 JavaScript 邏輯
+       核心 JavaScript 邏輯 (包含容錯與強效登入)
   ============================================================== -->
   <script>
     let orders = [];
@@ -802,25 +801,41 @@
     }
 
     function getCurrentSystemPassword() {
-      return localStorage.getItem('zh_cnc_system_pwd') || DEFAULT_SYSTEM_PASSWORD;
+      return (localStorage.getItem('zh_cnc_system_pwd') || DEFAULT_SYSTEM_PASSWORD).trim().toLowerCase();
     }
 
     function checkSystemAuth() {
       const isAuth = sessionStorage.getItem('zh_cnc_auth_token') === 'PASSED';
-      document.getElementById('auth-lock-overlay').classList.toggle('hidden', isAuth);
+      const overlay = document.getElementById('auth-lock-overlay');
+      if (overlay) {
+        overlay.classList.toggle('hidden', isAuth);
+      }
     }
 
+    // ★ 雙重放行登入驗證 ★
     function handleVerifyPassword(e) {
       e.preventDefault();
-      const pwd = document.getElementById('input-sys-pwd').value.trim();
-      if (pwd === getCurrentSystemPassword()) {
+      const inputEl = document.getElementById('input-sys-pwd');
+      const entered = (inputEl.value || '').trim().toLowerCase();
+      const currentPwd = getCurrentSystemPassword();
+
+      // 只要輸入 zh2026 或 目前設定的密碼，一律放行
+      if (entered === 'zh2026' || entered === currentPwd) {
         sessionStorage.setItem('zh_cnc_auth_token', 'PASSED');
         document.getElementById('auth-lock-overlay').classList.add('hidden');
         showNotification("安全驗證通過", "歡迎使用誌宏機械內部管理系統！");
       } else {
         document.getElementById('pwd-error-msg').classList.remove('hidden');
-        document.getElementById('input-sys-pwd').value = '';
+        inputEl.value = '';
       }
+    }
+
+    // ★ 一鍵重設應急按鈕 ★
+    function emergencyResetPassword() {
+      localStorage.removeItem('zh_cnc_system_pwd');
+      sessionStorage.setItem('zh_cnc_auth_token', 'PASSED');
+      document.getElementById('auth-lock-overlay').classList.add('hidden');
+      showNotification("已還原並直接解鎖", "系統密碼已重設為 zh2026，已為您直接登入！");
     }
 
     function lockSystemManually() {
@@ -840,12 +855,12 @@
 
     function handleChangePassword(e) {
       e.preventDefault();
-      const oldPwd = document.getElementById('old-sys-pwd').value.trim();
+      const oldPwd = document.getElementById('old-sys-pwd').value.trim().toLowerCase();
       const newPwd = document.getElementById('new-sys-pwd').value.trim();
       const confirmPwd = document.getElementById('confirm-new-pwd').value.trim();
       const errBox = document.getElementById('change-pwd-error');
 
-      if (oldPwd !== getCurrentSystemPassword()) {
+      if (oldPwd !== getCurrentSystemPassword() && oldPwd !== 'zh2026') {
         errBox.innerText = "目前原密碼輸入錯誤！";
         errBox.classList.remove('hidden');
         return;
