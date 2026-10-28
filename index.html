@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>誌宏機械有限公司 - CNC 生產進度、客戶廠商隔離與中一刀銷貨管理系統</title>
+  <title>誌宏機械有限公司 - CNC 生產進度與中一刀銷貨管理系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
@@ -29,7 +29,7 @@
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
     /* ==============================================================
-       ★ 中一刀三聯銷貨單專用 CSS (寬度內縮 195mm、固定高度與方正大簽章) ★
+       ★ 中一刀連續打單專用 CSS (寬度 195mm 內縮、每頁 139.7mm 強制斷頁) ★
     ============================================================== */
     @media print {
       @page {
@@ -44,21 +44,36 @@
       body * {
         visibility: hidden !important;
       }
-      #printable-invoice-sheet, #printable-invoice-sheet * {
+      #printable-invoice-container, #printable-invoice-container * {
         visibility: visible !important;
       }
-      #printable-invoice-sheet {
+      #printable-invoice-container {
         display: block !important;
-        position: fixed !important;
-        left: 4mm !important;
-        top: 3.5mm !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+      .printable-invoice-page {
+        display: block !important;
+        page-break-after: always !important;
+        break-after: page !important;
         width: 195mm !important;
         height: 132mm !important;
+        margin-left: 4mm !important;
+        margin-top: 3.5mm !important;
         padding: 0 !important;
-        margin: 0 !important;
+        box-sizing: border-box !important;
         background: #ffffff !important;
         color: #000000 !important;
-        box-sizing: border-box !important;
+        position: relative !important;
+      }
+      .printable-invoice-page:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
       }
     }
     .invoice-table { border-collapse: collapse; width: 100%; border: 1.2px solid #000; }
@@ -68,11 +83,11 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
 
   <script>
-    const GOOGLE_SCRIPT_URL = '請將剛才複製的Google_Apps_Script網址貼在此處';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_vvpQgAj_wyRnE7yLlpwmBqVIP9v8GLLA9APUnu88svA6eLnCLVoEK8r4Jp6G-i-U/exec';
     const DEFAULT_SYSTEM_PASSWORD = 'zh2026';
   </script>
 
-  <!-- 全域安全密碼鎖定遮罩 (升級版：含防呆與一鍵救援重設) -->
+  <!-- 全域安全密碼鎖定遮罩 -->
   <div id="auth-lock-overlay" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-4">
     <div class="bg-slate-900 border-2 border-cyan-500/80 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
       <div class="w-16 h-16 bg-cyan-950 border border-cyan-500 text-cyan-400 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-lg shadow-cyan-500/20">
@@ -109,14 +124,14 @@
           <div class="flex items-center gap-1.5 sm:gap-2">
             <span class="font-black text-sm sm:text-base text-white tracking-wide">誌宏機械有限公司</span>
             <span id="cloud-badge" class="text-[10px] bg-slate-800 border border-slate-700 text-slate-400 px-1.5 py-0.2 rounded font-mono font-bold flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 本地模式
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 連線中...
             </span>
           </div>
-          <p class="text-[11px] text-slate-400">雙軌隔離架構 · 廠商個資保護 · 中一刀三聯銷貨單套印</p>
+          <p class="text-[11px] text-slate-400">雙軌隔離架構 · 廠商個資保護 · 中一刀連續打單自動分頁</p>
         </div>
       </div>
 
-      <!-- 切換頁籤 -->
+      <!-- 切換頁籤 (方案 B：手機端隱藏銷貨單與客戶庫) -->
       <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
         <button id="view-btn-office" onclick="switchView('office')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan-600 text-white shadow-md whitespace-nowrap">
           <i class="ph-bold ph-buildings text-sm sm:text-base"></i>
@@ -169,7 +184,7 @@
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
         <div>
           <h1 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">誌宏機械 · 全廠工單圖面與流轉總覽</h1>
-          <p class="text-xs text-slate-400 mt-0.5">管控工程圖面版次、機台報工，完工工單可直接點擊開立中一刀銷貨單[cite: 4]。</p>
+          <p class="text-xs text-slate-400 mt-0.5">管控工程圖面版次、機台報工，完工工單可直接點擊開立中一刀銷貨單。</p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <button onclick="exportCompletedOrdersCSV()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm tactile-btn flex items-center justify-center gap-1.5 shadow">
@@ -243,7 +258,7 @@
       <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border-2 border-emerald-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
           <h2 class="text-lg sm:text-xl font-black text-white">誌宏機械 · 中一刀三聯銷貨單管理 (替代 QBoss)</h2>
-          <p class="text-xs text-slate-400">標準寬度 195mm 內縮防撞孔、固定外框高度、方正大簽章格式。</p>
+          <p class="text-xs text-slate-400">標準寬度 195mm 內縮防撞孔、固定 6 行高度、超過筆數自動切頁連打。</p>
         </div>
         <button onclick="openCreateInvoiceModal()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl tactile-btn flex items-center gap-2 shadow-lg shadow-emerald-600/30">
           <i class="ph-bold ph-plus-circle text-base"></i> 手動開立銷貨單
@@ -258,8 +273,8 @@
               <th class="p-3">銷貨日期</th>
               <th class="p-3">客戶名稱</th>
               <th class="p-3">業務人員</th>
-              <th class="p-3">品名規格</th>
-              <th class="p-3">數量</th>
+              <th class="p-3">品項筆數</th>
+              <th class="p-3">總件數</th>
               <th class="p-3">總計(含稅)</th>
               <th class="p-3 text-right">操作</th>
             </tr>
@@ -274,7 +289,7 @@
       <div class="bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-900 border-2 border-blue-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
           <h2 class="text-lg sm:text-xl font-black text-white">誌宏機械 · 配合客戶主檔資料庫</h2>
-          <p class="text-xs text-slate-400">統一編號、聯絡窗口、電話、傳真與送貨廠址由辦公室維護，開單自動帶入[cite: 4]。</p>
+          <p class="text-xs text-slate-400">統一編號、聯絡窗口、電話、傳真與送貨廠址由辦公室維護，開單自動帶入。</p>
         </div>
         <button onclick="openAddClientModal()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl tactile-btn flex items-center gap-2 shadow-lg shadow-cyan-600/30">
           <i class="ph-bold ph-user-plus text-base"></i> 新增配合客戶
@@ -364,70 +379,9 @@
   </main>
 
   <!-- ==============================================================
-       ★ 中一刀三聯銷貨單列印容器 (寬度 195mm 內縮防撞孔、固定外框與大簽章) ★
+       ★ 中一刀三聯銷貨單列印容器 (動態支援多頁連續連打) ★
   ============================================================== -->
-  <div id="printable-invoice-sheet" class="hidden font-sans text-black bg-white select-none">
-    <div class="flex justify-between items-start border-b border-black pb-1 mb-1">
-      <div>
-        <h1 class="text-lg font-black tracking-wider leading-tight">誌宏機械有限公司</h1>
-        <p class="text-[10px] leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>
-        <p class="text-[10px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>
-      </div>
-      <div class="text-center pt-0.5">
-        <h2 class="text-2xl font-black tracking-widest border-b-2 border-black pb-0.5 px-3">銷 貨 單</h2>
-        <div class="text-[10px] mt-0.5 font-mono">第 1 頁 / 共 1 頁</div>
-      </div>
-      <div class="text-right text-[10px] leading-tight space-y-0.5">
-        <div>業務人員：<span id="inv-print-sales" class="font-bold">徐佩萱</span></div>
-        <div>課稅別：<span id="inv-print-tax-type" class="font-bold">應稅</span></div>
-        <div>銷貨單號：<span id="inv-print-no" class="font-mono font-bold">2026102801</span></div>
-        <div>銷貨日期：<span id="inv-print-date" class="font-mono font-bold">2026 年 10 月 28 日</span></div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 text-[10.5px] leading-tight border border-black p-1.5 mb-1 bg-white">
-      <div>
-        <div>客戶名稱：<strong id="inv-print-client-name">--</strong></div>
-        <div>統一編號：<span id="inv-print-tax-id" class="font-mono">--</span></div>
-        <div>送貨地址：<span id="inv-print-address">--</span></div>
-      </div>
-      <div class="pl-2">
-        <div>聯 絡 人：<span id="inv-print-contact">--</span></div>
-        <div>聯絡電話：<span id="inv-print-phone" class="font-mono">--</span></div>
-        <div>傳真號碼：<span id="inv-print-fax" class="font-mono">--</span></div>
-      </div>
-    </div>
-
-    <table class="invoice-table text-[10.5px] mb-1">
-      <thead>
-        <tr class="bg-gray-100 text-center font-bold">
-          <th style="width: 45%;">品名規格 / 圖號</th>
-          <th style="width: 13%;">數量</th>
-          <th style="width: 17%;">單價</th>
-          <th style="width: 25%;">金額</th>
-        </tr>
-      </thead>
-      <tbody id="inv-print-items-body"></tbody>
-    </table>
-
-    <div class="border border-black px-2 py-1 text-[11px] font-mono flex justify-between items-center mb-1">
-      <div>數量總計：<strong id="inv-print-total-qty">0</strong> PCS</div>
-      <div>合 &nbsp; 計：<span id="inv-print-subtotal">0</span> 元</div>
-      <div>稅 &nbsp; 額：<span id="inv-print-tax">0</span> 元</div>
-      <div>總 &nbsp; 計：<strong id="inv-print-grand-total" class="text-sm">0</strong> 元</div>
-    </div>
-
-    <div class="grid grid-cols-12 border border-black" style="height: 22mm;">
-      <div class="col-span-7 p-1.5 border-r border-black flex flex-col justify-between text-[10.5px]">
-        <div class="font-bold">備註：<span id="inv-print-notes" class="font-normal"></span></div>
-        <div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>
-      </div>
-      <div class="col-span-5 p-1.5 flex flex-col justify-between text-[10.5px]">
-        <div class="font-bold">客戶簽章：</div>
-        <div class="text-center text-[10px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>
-      </div>
-    </div>
-  </div>
+  <div id="printable-invoice-container" class="hidden"></div>
 
   <!-- ==============================================================
        MODALS 彈窗
@@ -467,14 +421,14 @@
 
   <!-- 開立銷貨單彈窗 -->
   <div id="invoice-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
-    <div class="bg-slate-900 border-2 border-emerald-600 w-full max-w-xl rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+    <div class="bg-slate-900 border-2 border-emerald-600 w-full max-w-2xl rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
         <div>
           <h3 class="text-white font-bold text-base flex items-center gap-2">
             <i class="ph-bold ph-receipt text-emerald-400"></i>
             開立中一刀三聯銷貨單
           </h3>
-          <p class="text-[11px] text-slate-400">自動計算未稅合計、5% 營業稅與總計金額[cite: 4]</p>
+          <p class="text-[11px] text-slate-400">每 6 筆自動切頁連續輸出，動態計算營業稅與總額。</p>
         </div>
         <button onclick="closeModal('invoice-modal')" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
@@ -503,29 +457,21 @@
           <div class="col-span-2">送貨地址：<span id="inv-form-address" class="text-white">--</span></div>
         </div>
 
-        <div class="border-t border-slate-800 pt-3">
-          <label class="block text-emerald-400 font-bold mb-1">品名規格 / 圖號名稱 *</label>
-          <input type="text" id="inv-form-item-name" required placeholder="例：6T291A1505 (精密定位閥座)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white">
-        </div>
-
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label class="block text-slate-400 mb-1">實出數量 (PCS) *</label>
-            <input type="number" id="inv-form-qty" required value="1" min="1" oninput="calculateInvoiceAmounts()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
+        <!-- 多品項動態列表 -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="text-emerald-400 font-bold text-xs">品名規格清單 (超過 6 筆自動歸類至下一頁連打)</label>
+            <button type="button" onclick="addInvoiceItemRow()" class="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold flex items-center gap-1">
+              <i class="ph-bold ph-plus"></i> ＋ 新增品項
+            </button>
           </div>
-          <div>
-            <label class="block text-slate-400 mb-1">加工單價 (元) *</label>
-            <input type="number" id="inv-form-price" required value="0" min="0" step="any" oninput="calculateInvoiceAmounts()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-mono font-bold">
-          </div>
-          <div>
-            <label class="block text-slate-400 mb-1">未稅金額 (元)</label>
-            <input type="text" id="inv-form-amount" readonly class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 font-mono">
-          </div>
+          <div id="invoice-items-form-container" class="space-y-2"></div>
         </div>
 
         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center font-mono text-xs">
+          <div>總件數：<span id="inv-calc-total-qty" class="text-white font-bold">0</span> PCS</div>
           <div>未稅合計：<span id="inv-calc-subtotal" class="text-white font-bold">0</span> 元</div>
-          <div>5% 營業稅：<span id="inv-calc-tax" class="text-amber-300 font-bold">0</span> 元</div>
+          <div>5% 稅額：<span id="inv-calc-tax" class="text-amber-300 font-bold">0</span> 元</div>
           <div>總計金額：<strong id="inv-calc-total" class="text-emerald-400 text-sm font-bold">0</strong> 元</div>
         </div>
 
@@ -747,17 +693,17 @@
   </div>
 
   <!-- ==============================================================
-       核心 JavaScript 邏輯 (包含容錯與強效登入)
+       核心 JavaScript 邏輯 (採標準字串拼接，杜絕語法截斷報錯)
   ============================================================== -->
   <script>
     let orders = [];
-    let invoices = JSON.parse(localStorage.getItem('zh_cnc_invoices_v18')) || [];
-    let salesPersons = JSON.parse(localStorage.getItem('zh_cnc_sales_list_v18')) || ["徐佩萱", "陳宏嘉"];
+    let invoices = JSON.parse(localStorage.getItem('zh_cnc_invoices_v21')) || [];
+    let salesPersons = JSON.parse(localStorage.getItem('zh_cnc_sales_list_v21')) || ["徐佩萱", "陳宏嘉"];
     let currentFilter = 'ALL';
     let currentClientFilter = 'ALL';
     let currentWorkerOrderId = null;
 
-    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v18')) || [
+    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v21')) || [
       {
         id: "C001",
         name: "均豪精密工業股份有限公司",
@@ -770,7 +716,7 @@
       }
     ];
 
-    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v18')) || [
+    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v21')) || [
       { category: "碳鋼 / 合金鋼", name: "S45C (中碳鋼)" },
       { category: "碳鋼 / 合金鋼", name: "SS440 (中碳板)" },
       { category: "不鏽鋼系列", name: "SUS304 (耐蝕不鏽鋼)" },
@@ -780,8 +726,8 @@
       { category: "工程塑膠", name: "PEEK (半導體特塑)" }
     ];
 
-    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v18')) || [];
-    let outsourceProcesses = JSON.parse(localStorage.getItem('zh_cnc_processes_v18')) || [
+    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v21')) || [];
+    let outsourceProcesses = JSON.parse(localStorage.getItem('zh_cnc_processes_v21')) || [
       { type: "表面處理", name: "陽極處理 (本色霧面)" },
       { type: "表面處理", name: "硬質陽極 (硬陽 30μm)" },
       { type: "表面處理", name: "黑色陽極處理" },
@@ -797,7 +743,7 @@
       document.getElementById('toast-title').innerText = title;
       document.getElementById('toast-body').innerText = msg;
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 3500);
+      setTimeout(function() { t.classList.add('hidden'); }, 3500);
     }
 
     function getCurrentSystemPassword() {
@@ -812,14 +758,12 @@
       }
     }
 
-    // ★ 雙重放行登入驗證 ★
     function handleVerifyPassword(e) {
       e.preventDefault();
       const inputEl = document.getElementById('input-sys-pwd');
       const entered = (inputEl.value || '').trim().toLowerCase();
       const currentPwd = getCurrentSystemPassword();
 
-      // 只要輸入 zh2026 或 目前設定的密碼，一律放行
       if (entered === 'zh2026' || entered === currentPwd) {
         sessionStorage.setItem('zh_cnc_auth_token', 'PASSED');
         document.getElementById('auth-lock-overlay').classList.add('hidden');
@@ -830,7 +774,6 @@
       }
     }
 
-    // ★ 一鍵重設應急按鈕 ★
     function emergencyResetPassword() {
       localStorage.removeItem('zh_cnc_system_pwd');
       sessionStorage.setItem('zh_cnc_auth_token', 'PASSED');
@@ -881,7 +824,7 @@
       showNotification("密碼變更成功", "系統通關密碼已更新！");
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', function() {
       checkSystemAuth();
       refreshCustomerSelectDropdown();
       refreshBoardClientFilter();
@@ -893,10 +836,10 @@
       fetchCloudData();
     });
 
-    async function fetchCloudData(showToast = false) {
+    async function fetchCloudData(showToast) {
       const badge = document.getElementById('cloud-badge');
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('請將剛才複製') !== -1) {
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v18')) || [];
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('AKfycbx') === -1) {
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v21')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -905,28 +848,33 @@
       try {
         const res = await fetch(GOOGLE_SCRIPT_URL);
         const data = await res.json();
-        orders = data.map(row => ({
-          id: String(row["工單號碼"] || row["id"]).trim(),
-          partName: row["零件名稱"] || row["part_name"] || "零件",
-          customer: row["客戶名稱"] || row["customer"] || "",
-          material: row["材質規格"] || row["material"] || "",
-          machine: row["加工機台"] || row["machine"] || "",
-          targetQty: parseInt(row["目標數量"] || row["target_qty"]) || 1,
-          dueDate: row["交貨日期"] || row["due_date"] || "",
-          status: row["目前狀態"] || row["status"] || "待加工",
-          statusTime: row["更新時間"] || row["status_time"] || "",
-          notes: row["備註"] || "",
-          completionData: typeof row["完工/自檢資料"] === 'string' && row["完工/自檢資料"] ? JSON.parse(row["完工/自檢資料"]) : row["完工/自檢資料"],
-          outsourceData: typeof row["外包資料"] === 'string' && row["外包資料"] ? JSON.parse(row["外包資料"]) : row["外包資料"],
-          defectLogs: typeof row["不良紀錄"] === 'string' && row["不良紀錄"] ? JSON.parse(row["不良紀錄"]) : (row["不良紀錄"] || [])
-        }));
+        orders = data.map(function(row) {
+          return {
+            id: String(row["工單號碼"] || row["id"]).trim(),
+            partName: row["零件名稱"] || row["part_name"] || "零件",
+            customer: row["客戶名稱"] || row["customer"] || "",
+            material: row["材質規格"] || row["material"] || "",
+            machine: row["加工機台"] || row["machine"] || "",
+            targetQty: parseInt(row["目標數量"] || row["target_qty"]) || 1,
+            dueDate: row["交貨日期"] || row["due_date"] || "",
+            status: row["目前狀態"] || row["status"] || "待加工",
+            statusTime: row["更新時間"] || row["status_time"] || "",
+            notes: row["備註"] || "",
+            completionData: typeof row["完工/自檢資料"] === 'string' && row["完工/自檢資料"] ? JSON.parse(row["完工/自檢資料"]) : row["完工/自檢資料"],
+            outsourceData: typeof row["外包資料"] === 'string' && row["外包資料"] ? JSON.parse(row["外包資料"]) : row["外包資料"],
+            defectLogs: typeof row["不良紀錄"] === 'string' && row["不良紀錄"] ? JSON.parse(row["不良紀錄"]) : (row["不良紀錄"] || [])
+          };
+        });
         badge.className = "text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-300 px-1.5 py-0.2 rounded font-mono font-bold flex items-center gap-1";
         badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Google 雲端已連線';
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
+        if (showToast) showNotification("雲端同步成功", "已同步最新試算表工單資料！");
       } catch (e) {
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v18')) || [];
+        badge.className = "text-[10px] bg-amber-950 border border-amber-800 text-amber-300 px-1.5 py-0.2 rounded font-mono font-bold flex items-center gap-1";
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> 本地離線暫存';
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v21')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -949,21 +897,21 @@
         notes: document.getElementById('form-notes').value || ""
       };
 
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('請將剛才複製') !== -1) {
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "create_order", order: newOrder }) });
+        closeModal('new-order-modal');
+        document.getElementById('new-order-form').reset();
+        fetchCloudData();
+        showNotification("工單已發布", "工單 " + orderNo + " 已同步儲存至 Google 雲端！");
+      } catch (err) {
         orders.unshift(newOrder);
-        localStorage.setItem('zh_cnc_local_orders_v18', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v21', JSON.stringify(orders));
         closeModal('new-order-modal');
         document.getElementById('new-order-form').reset();
         renderOfficeBoard();
         populateWorkerOrderSelector();
-        showNotification("工單已建立", `工單 ${orderNo} 已發布！`);
-        return;
+        showNotification("本地已儲存", "工單 " + orderNo + " 已儲存於本機！");
       }
-
-      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "create_order", order: newOrder }) });
-      closeModal('new-order-modal');
-      document.getElementById('new-order-form').reset();
-      fetchCloudData();
     }
 
     async function handleConfirmCompletion(e) {
@@ -976,86 +924,102 @@
       const nextStep = document.getElementById('complete-next-step').value;
       const newStatus = nextStep === 'OUTSOURCE' ? '外包中' : '已完成';
 
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('請將剛才複製') !== -1) {
-        const o = orders.find(x => String(x.id).trim() === orderId);
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: "update_status", orderId: orderId, status: newStatus, completionData: { goodQty: goodQty, defectQty: defectQty, operator: operator } })
+        });
+        closeModal('completion-modal');
+        fetchCloudData();
+        showNotification("完工報工成功", "工單 " + orderId + " 狀態已更新為【" + newStatus + "】！");
+      } catch (err) {
+        const o = orders.find(function(x) { return String(x.id).trim() === orderId; });
         if (o) {
           o.status = newStatus;
-          o.completionData = { goodQty, defectQty, operator };
-          localStorage.setItem('zh_cnc_local_orders_v18', JSON.stringify(orders));
+          o.completionData = { goodQty: goodQty, defectQty: defectQty, operator: operator };
+          localStorage.setItem('zh_cnc_local_orders_v21', JSON.stringify(orders));
         }
         closeModal('completion-modal');
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
-        showNotification("完工報工成功", `工單 ${orderId} 已標示為【${newStatus}】！`);
-        return;
+        showNotification("本地已更新", "工單 " + orderId + " 狀態已暫存為【" + newStatus + "】！");
       }
-
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: "update_status", orderId, status: newStatus, completionData: { goodQty, defectQty, operator } })
-      });
-      closeModal('completion-modal');
-      fetchCloudData();
     }
 
     function renderOfficeBoard() {
       const grid = document.getElementById('orders-grid');
       if (!grid) return;
       grid.innerHTML = '';
-      const activeList = orders.filter(o => !o.isArchived);
+      const activeList = orders.filter(function(o) { return !o.isArchived; });
 
       document.getElementById('stat-total').innerText = activeList.length;
-      document.getElementById('stat-pending').innerText = activeList.filter(o => o.status === '待加工').length;
-      document.getElementById('stat-processing').innerText = activeList.filter(o => o.status === '加工中').length;
-      document.getElementById('stat-outsource').innerText = activeList.filter(o => o.status === '外包中').length;
-      document.getElementById('stat-completed').innerText = activeList.filter(o => o.status === '已完成').length;
-      document.getElementById('stat-archived').innerText = orders.filter(o => o.isArchived).length;
+      document.getElementById('stat-pending').innerText = activeList.filter(function(o) { return o.status === '待加工'; }).length;
+      document.getElementById('stat-processing').innerText = activeList.filter(function(o) { return o.status === '加工中'; }).length;
+      document.getElementById('stat-outsource').innerText = activeList.filter(function(o) { return o.status === '外包中'; }).length;
+      document.getElementById('stat-completed').innerText = activeList.filter(function(o) { return o.status === '已完成'; }).length;
+      document.getElementById('stat-archived').innerText = orders.filter(function(o) { return o.isArchived; }).length;
 
       document.getElementById('count-all').innerText = activeList.length;
-      document.getElementById('count-pending').innerText = activeList.filter(o => o.status === '待加工').length;
-      document.getElementById('count-processing').innerText = activeList.filter(o => o.status === '加工中').length;
-      document.getElementById('count-outsource').innerText = activeList.filter(o => o.status === '外包中').length;
-      document.getElementById('count-done').innerText = activeList.filter(o => o.status === '已完成').length;
-      document.getElementById('count-archived').innerText = orders.filter(o => o.isArchived).length;
+      document.getElementById('count-pending').innerText = activeList.filter(function(o) { return o.status === '待加工'; }).length;
+      document.getElementById('count-processing').innerText = activeList.filter(function(o) { return o.status === '加工中'; }).length;
+      document.getElementById('count-outsource').innerText = activeList.filter(function(o) { return o.status === '外包中'; }).length;
+      document.getElementById('count-done').innerText = activeList.filter(function(o) { return o.status === '已完成'; }).length;
+      document.getElementById('count-archived').innerText = orders.filter(function(o) { return o.isArchived; }).length;
 
-      let displayOrders = activeList.filter(o => (currentFilter === 'ALL' || o.status === currentFilter) && (currentClientFilter === 'ALL' || o.customer === currentClientFilter));
-      if (currentFilter === 'ARCHIVED') displayOrders = orders.filter(o => o.isArchived);
+      let displayOrders = activeList.filter(function(o) {
+        return (currentFilter === 'ALL' || o.status === currentFilter) && (currentClientFilter === 'ALL' || o.customer === currentClientFilter);
+      });
+      if (currentFilter === 'ARCHIVED') {
+        displayOrders = orders.filter(function(o) { return o.isArchived; });
+      }
 
-      displayOrders.forEach(o => {
+      displayOrders.forEach(function(o) {
         const isDone = o.status === '已完成';
         const card = document.createElement('div');
         card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3";
-        card.innerHTML = `
-          <div class="flex justify-between items-start border-b border-slate-800 pb-2">
-            <div>
-              <span class="font-mono text-cyan-400 font-bold text-sm">${o.id}</span>
-              <h3 class="font-bold text-white text-base mt-0.5">${o.partName}</h3>
-              <div class="text-xs text-slate-400"><i class="ph ph-buildings"></i> ${o.customer}</div>
-            </div>
-            <span class="px-2 py-0.5 rounded text-xs font-bold ${isDone?'bg-emerald-950 text-emerald-300 border border-emerald-800':(o.status==='外包中'?'bg-purple-950 text-purple-300 border border-purple-800':'bg-blue-950 text-blue-300 border border-blue-800')}">${o.status}</span>
-          </div>
-          <div class="text-xs text-slate-300 flex justify-between font-mono">
-            <span>材質: ${o.material}</span>
-            <span>數量: ${o.targetQty} PCS</span>
-          </div>
-          <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
-            <span class="text-slate-500 font-mono">機台: ${o.machine}</span>
-            <div class="flex gap-2">
-              ${isDone ? `<button onclick="quickCreateInvoiceFromOrder('${o.id}')" class="px-2.5 py-1 bg-emerald-600/90 hover:bg-emerald-500 text-slate-950 font-black rounded-lg text-xs flex items-center gap-1 shadow"><i class="ph-bold ph-receipt"></i> 開銷貨單</button>` : ''}
-              <button onclick="toggleArchive('${o.id}')" class="text-slate-400 hover:text-cyan-300 font-bold">${o.isArchived?'解除封存':'📦 封存'}</button>
-            </div>
-          </div>
-        `;
+        
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-950 text-blue-300 border border-blue-800">' + o.status + '</span>';
+        if (isDone) {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">' + o.status + '</span>';
+        } else if (o.status === '外包中') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-bold bg-purple-950 text-purple-300 border border-purple-800">' + o.status + '</span>';
+        }
+
+        let invoiceBtn = '';
+        if (isDone) {
+          invoiceBtn = '<button onclick="quickCreateInvoiceFromOrder(\'' + o.id + '\')" class="px-2.5 py-1 bg-emerald-600/90 hover:bg-emerald-500 text-slate-950 font-black rounded-lg text-xs flex items-center gap-1 shadow"><i class="ph-bold ph-receipt"></i> 開銷貨單</button>';
+        }
+
+        card.innerHTML = 
+          '<div class="flex justify-between items-start border-b border-slate-800 pb-2">' +
+            '<div>' +
+              '<span class="font-mono text-cyan-400 font-bold text-sm">' + o.id + '</span>' +
+              '<h3 class="font-bold text-white text-base mt-0.5">' + o.partName + '</h3>' +
+              '<div class="text-xs text-slate-400"><i class="ph ph-buildings"></i> ' + o.customer + '</div>' +
+            '</div>' +
+            statusBadge +
+          '</div>' +
+          '<div class="text-xs text-slate-300 flex justify-between font-mono">' +
+            '<span>材質: ' + o.material + '</span>' +
+            '<span>數量: ' + o.targetQty + ' PCS</span>' +
+          '</div>' +
+          '<div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">' +
+            '<span class="text-slate-500 font-mono">機台: ' + o.machine + '</span>' +
+            '<div class="flex gap-2">' +
+              invoiceBtn +
+              '<button onclick="toggleArchive(\'' + o.id + '\')" class="text-slate-400 hover:text-cyan-300 font-bold">' + (o.isArchived ? '解除封存' : '📦 封存') + '</button>' +
+            '</div>' +
+          '</div>';
         grid.appendChild(card);
       });
     }
 
     function toggleArchive(id) {
-      const o = orders.find(x => String(x.id).trim() === String(id).trim());
+      const o = orders.find(function(x) { return String(x.id).trim() === String(id).trim(); });
       if (o) {
         o.isArchived = !o.isArchived;
-        localStorage.setItem('zh_cnc_local_orders_v18', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v21', JSON.stringify(orders));
         renderOfficeBoard();
       }
     }
@@ -1064,16 +1028,16 @@
       const s = document.getElementById('worker-order-selector');
       if (!s) return;
       s.innerHTML = '';
-      const list = orders.filter(o => !o.isArchived);
+      const list = orders.filter(function(o) { return !o.isArchived; });
       if (list.length === 0) { s.innerHTML = '<option value="">目前無在製工單</option>'; currentWorkerOrderId = null; return; }
-      list.forEach(o => {
+      list.forEach(function(o) {
         const opt = document.createElement('option');
         opt.value = String(o.id).trim();
-        opt.innerText = `${o.id} - ${o.partName} [${o.status}]`;
+        opt.innerText = o.id + ' - ' + o.partName + ' [' + o.status + ']';
         if (String(o.id).trim() === String(currentWorkerOrderId).trim()) opt.selected = true;
         s.appendChild(opt);
       });
-      if (!currentWorkerOrderId || !list.some(o => String(o.id).trim() === String(currentWorkerOrderId).trim())) {
+      if (!currentWorkerOrderId || !list.some(function(o) { return String(o.id).trim() === String(currentWorkerOrderId).trim(); })) {
         currentWorkerOrderId = String(list[0].id).trim();
         s.value = currentWorkerOrderId;
       }
@@ -1088,42 +1052,41 @@
         c.innerHTML = '<div class="p-16 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800 font-bold">現場目前無在製工單</div>';
         return;
       }
-      const o = orders.find(x => String(x.id).trim() === String(currentWorkerOrderId).trim());
+      const o = orders.find(function(x) { return String(x.id).trim() === String(currentWorkerOrderId).trim(); });
       if (!o) return;
-      c.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <div>
-              <span class="text-cyan-400 font-mono font-bold text-xl">${o.id}</span>
-              <h2 class="text-xl font-bold text-white mt-1">${o.partName}</h2>
-              <div class="text-xs text-slate-400 mt-0.5">指定機台: <strong class="text-cyan-300 font-bold">${o.machine}</strong> | 目標: <strong class="text-white">${o.targetQty} PCS</strong></div>
-            </div>
-            <span class="text-sm px-3 py-1 rounded-full font-bold bg-slate-800 text-cyan-300 border border-slate-700">${o.status}</span>
-          </div>
-          <div class="blueprint-grid rounded-xl p-8 text-center text-cyan-400 font-mono text-sm border border-slate-800">
-            [ 2D 精密工程圖面尺寸視圖 - 尺寸公差正常 ]
-          </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-300">
-            <span class="text-amber-400 font-bold block mb-1">公差要求：</span>${o.notes || '依工程圖面規格施作。'}
-          </div>
-          <div class="grid grid-cols-2 gap-3 pt-2">
-            <button onclick="workerQuickStatus('${o.id}', '加工中')" class="py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500 rounded-xl font-bold">機台開始加工 (銑削中)</button>
-            <button onclick="openCompletionModal('${o.id}')" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl">完工報工 (同步雲端)</button>
-          </div>
-        </div>
-      `;
+      c.innerHTML = 
+        '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">' +
+          '<div class="flex justify-between items-center border-b border-slate-800 pb-3">' +
+            '<div>' +
+              '<span class="text-cyan-400 font-mono font-bold text-xl">' + o.id + '</span>' +
+              '<h2 class="text-xl font-bold text-white mt-1">' + o.partName + '</h2>' +
+              '<div class="text-xs text-slate-400 mt-0.5">指定機台: <strong class="text-cyan-300 font-bold">' + o.machine + '</strong> | 目標: <strong class="text-white">' + o.targetQty + ' PCS</strong></div>' +
+            '</div>' +
+            '<span class="text-sm px-3 py-1 rounded-full font-bold bg-slate-800 text-cyan-300 border border-slate-700">' + o.status + '</span>' +
+          '</div>' +
+          '<div class="blueprint-grid rounded-xl p-8 text-center text-cyan-400 font-mono text-sm border border-slate-800">' +
+            '[ 2D 精密工程圖面尺寸視圖 - 尺寸公差正常 ]' +
+          '</div>' +
+          '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-300">' +
+            '<span class="text-amber-400 font-bold block mb-1">公差要求：</span>' + (o.notes || '依工程圖面規格施作。') +
+          '</div>' +
+          '<div class="grid grid-cols-2 gap-3 pt-2">' +
+            '<button onclick="workerQuickStatus(\'' + o.id + '\', \'加工中\')" class="py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500 rounded-xl font-bold">機台開始加工 (銑削中)</button>' +
+            '<button onclick="openCompletionModal(\'' + o.id + '\')" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl">完工報工 (同步雲端)</button>' +
+          '</div>' +
+        '</div>';
     }
 
     async function workerQuickStatus(id, st) {
       const orderId = String(id).trim();
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('請將剛才複製') !== -1) {
-        const o = orders.find(x => String(x.id).trim() === orderId);
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_status", orderId: orderId, status: st }) });
+        fetchCloudData();
+      } catch (err) {
+        const o = orders.find(function(x) { return String(x.id).trim() === orderId; });
         if (o) o.status = st;
         renderShopfloorView(); renderOfficeBoard();
-        return;
       }
-      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_status", orderId, status: st }) });
-      fetchCloudData();
     }
     function openCompletionModal(id) {
       document.getElementById('completion-form').dataset.orderId = String(id).trim();
@@ -1135,59 +1098,98 @@
     }
 
     // ==============================================================
-    // ★ 業務人員管理與中一刀銷貨單套印核心邏輯 ★
+    // ★ 業務人員管理與中一刀連續打單 (支援動態多品項自動分頁) ★
     // ==============================================================
     function refreshSalesDatalist() {
       const dl = document.getElementById('sales-list');
       if (!dl) return;
       dl.innerHTML = '';
-      salesPersons.forEach(s => {
+      salesPersons.forEach(function(s) {
         const opt = document.createElement('option');
         opt.value = s;
         dl.appendChild(opt);
       });
     }
 
+    function addInvoiceItemRow(name, qty, price) {
+      name = name || '';
+      qty = (qty !== undefined) ? qty : 10;
+      price = (price !== undefined) ? price : 0;
+      
+      const container = document.getElementById('invoice-items-form-container');
+      const rowId = 'item-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = "grid grid-cols-12 gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs";
+      div.innerHTML = 
+        '<div class="col-span-6">' +
+          '<input type="text" placeholder="品名規格 / 圖號名稱 *" value="' + name + '" required class="item-name w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white outline-none">' +
+        '</div>' +
+        '<div class="col-span-2">' +
+          '<input type="number" placeholder="數量" value="' + qty + '" min="1" required oninput="calculateInvoiceAmounts()" class="item-qty w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono font-bold text-center">' +
+        '</div>' +
+        '<div class="col-span-3">' +
+          '<input type="number" placeholder="單價" value="' + price + '" min="0" step="any" required oninput="calculateInvoiceAmounts()" class="item-price w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-amber-300 font-mono font-bold text-right">' +
+        '</div>' +
+        '<div class="col-span-1 text-center">' +
+          '<button type="button" onclick="removeInvoiceItemRow(\'' + rowId + '\')" class="text-rose-400 hover:text-rose-300 p-1 text-sm"><i class="ph-bold ph-trash"></i></button>' +
+        '</div>';
+      container.appendChild(div);
+      calculateInvoiceAmounts();
+    }
+
+    function removeInvoiceItemRow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) el.remove();
+      const container = document.getElementById('invoice-items-form-container');
+      if (container.children.length === 0) {
+        addInvoiceItemRow('', 10, 0);
+      }
+      calculateInvoiceAmounts();
+    }
+
     function openCreateInvoiceModal() {
       const d = new Date();
       const ymd = d.toISOString().split('T')[0].replace(/-/g, '');
-      document.getElementById('inv-form-no').value = `${ymd}${String(invoices.length + 1).padStart(2, '0')}`;
+      document.getElementById('inv-form-no').value = ymd + String(invoices.length + 1).padStart(2, '0');
       document.getElementById('inv-form-date').value = d.toISOString().split('T')[0];
       refreshInvoiceClientDropdown();
       document.getElementById('inv-form-sales').value = salesPersons[0] || '徐佩萱';
-      document.getElementById('inv-form-item-name').value = '';
-      document.getElementById('inv-form-qty').value = '10';
-      document.getElementById('inv-form-price').value = '0';
       document.getElementById('inv-form-notes').value = '';
-      calculateInvoiceAmounts();
+      
+      const container = document.getElementById('invoice-items-form-container');
+      container.innerHTML = '';
+      addInvoiceItemRow('', 10, 0);
+      
       openModal('invoice-modal');
     }
 
     function quickCreateInvoiceFromOrder(orderId) {
-      const o = orders.find(x => String(x.id).trim() === String(orderId).trim());
+      const o = orders.find(function(x) { return String(x.id).trim() === String(orderId).trim(); });
       if (!o) return;
       openCreateInvoiceModal();
       document.getElementById('inv-form-client').value = o.customer;
       onInvoiceClientChange(o.customer);
-      document.getElementById('inv-form-item-name').value = `${o.id} - ${o.partName} (${o.material})`;
+      
+      const container = document.getElementById('invoice-items-form-container');
+      container.innerHTML = '';
       const qty = o.completionData ? (o.completionData.goodQty || o.targetQty) : o.targetQty;
-      document.getElementById('inv-form-qty').value = qty;
-      calculateInvoiceAmounts();
+      addInvoiceItemRow(o.id + ' - ' + o.partName + ' (' + o.material + ')', qty, 0);
     }
 
     function refreshInvoiceClientDropdown() {
       const s = document.getElementById('inv-form-client');
       s.innerHTML = '';
-      clients.forEach(c => {
+      clients.forEach(function(c) {
         const opt = document.createElement('option');
-        opt.value = c.name; opt.innerText = `${c.name} (${c.id})`;
+        opt.value = c.name; opt.innerText = c.name + ' (' + c.id + ')';
         s.appendChild(opt);
       });
       if (clients.length > 0) onInvoiceClientChange(clients[0].name);
     }
 
     function onInvoiceClientChange(clientName) {
-      const c = clients.find(x => x.name === clientName);
+      const c = clients.find(function(x) { return x.name === clientName; });
       if (c) {
         document.getElementById('inv-form-taxid').innerText = c.taxId || '無統編';
         document.getElementById('inv-form-phone').innerText = c.phone || '--';
@@ -1196,13 +1198,24 @@
     }
 
     function calculateInvoiceAmounts() {
-      const qty = parseFloat(document.getElementById('inv-form-qty').value) || 0;
-      const price = parseFloat(document.getElementById('inv-form-price').value) || 0;
-      const subtotal = Math.round(qty * price);
+      const names = document.querySelectorAll('.item-name');
+      const qtys = document.querySelectorAll('.item-qty');
+      const prices = document.querySelectorAll('.item-price');
+
+      let totalQty = 0;
+      let subtotal = 0;
+
+      for (let i = 0; i < names.length; i++) {
+        const q = parseFloat(qtys[i].value) || 0;
+        const p = parseFloat(prices[i].value) || 0;
+        totalQty += q;
+        subtotal += Math.round(q * p);
+      }
+
       const tax = Math.round(subtotal * 0.05);
       const grandTotal = subtotal + tax;
 
-      document.getElementById('inv-form-amount').value = subtotal.toLocaleString();
+      document.getElementById('inv-calc-total-qty').innerText = totalQty;
       document.getElementById('inv-calc-subtotal').innerText = subtotal.toLocaleString();
       document.getElementById('inv-calc-tax').innerText = tax.toLocaleString();
       document.getElementById('inv-calc-total').innerText = grandTotal.toLocaleString();
@@ -1214,66 +1227,145 @@
       const invoiceDate = document.getElementById('inv-form-date').value;
       const clientName = document.getElementById('inv-form-client').value;
       const salesName = document.getElementById('inv-form-sales').value.trim() || '徐佩萱';
-      const itemName = document.getElementById('inv-form-item-name').value.trim();
-      const qty = parseFloat(document.getElementById('inv-form-qty').value) || 0;
-      const price = parseFloat(document.getElementById('inv-form-price').value) || 0;
-      const subtotal = Math.round(qty * price);
+      const notes = document.getElementById('inv-form-notes').value.trim();
+
+      const names = document.querySelectorAll('.item-name');
+      const qtys = document.querySelectorAll('.item-qty');
+      const prices = document.querySelectorAll('.item-price');
+
+      let items = [];
+      let totalQty = 0;
+      let subtotal = 0;
+
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i].value.trim();
+        const q = parseFloat(qtys[i].value) || 0;
+        const p = parseFloat(prices[i].value) || 0;
+        const amt = Math.round(q * p);
+        if (name) {
+          items.push({ name: name, qty: q, price: p, amount: amt });
+          totalQty += q;
+          subtotal += amt;
+        }
+      }
+
+      if (items.length === 0) {
+        alert("請至少輸入一筆品名規格！");
+        return;
+      }
+
       const tax = Math.round(subtotal * 0.05);
       const grandTotal = subtotal + tax;
-      const notes = document.getElementById('inv-form-notes').value.trim();
 
       if (!salesPersons.includes(salesName)) {
         salesPersons.push(salesName);
-        localStorage.setItem('zh_cnc_sales_list_v18', JSON.stringify(salesPersons));
+        localStorage.setItem('zh_cnc_sales_list_v21', JSON.stringify(salesPersons));
         refreshSalesDatalist();
       }
 
-      const c = clients.find(x => x.name === clientName) || {};
-
-      document.getElementById('inv-print-no').innerText = invoiceNo;
+      const c = clients.find(function(x) { return x.name === clientName; }) || {};
       const dParts = invoiceDate.split('-');
-      document.getElementById('inv-print-date').innerText = `${dParts[0]} 年 ${dParts[1]} 月 ${dParts[2]} 日`;
-      document.getElementById('inv-print-sales').innerText = salesName;
-      document.getElementById('inv-print-client-name').innerText = clientName;
-      document.getElementById('inv-print-tax-id').innerText = c.taxId || '';
-      document.getElementById('inv-print-address').innerText = c.address || '';
-      document.getElementById('inv-print-contact').innerText = c.contact || '';
-      document.getElementById('inv-print-phone').innerText = c.phone || '';
-      document.getElementById('inv-print-fax').innerText = c.fax || '';
+      const formattedDate = dParts[0] + ' 年 ' + dParts[1] + ' 月 ' + dParts[2] + ' 日';
 
-      const itemsBody = document.getElementById('inv-print-items-body');
-      let rowsHtml = `
-        <tr style="height: 7.2mm;">
-          <td class="font-bold">${itemName}</td>
-          <td class="text-center font-mono font-bold">${qty}</td>
-          <td class="text-right font-mono">${price.toLocaleString()}</td>
-          <td class="text-right font-mono font-bold">${subtotal.toLocaleString()}</td>
-        </tr>
-      `;
-      for (let i = 0; i < 5; i++) {
-        rowsHtml += `
-          <tr style="height: 7.2mm;">
-            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-          </tr>
-        `;
+      const pageSize = 6;
+      const totalPages = Math.ceil(items.length / pageSize);
+      const printContainer = document.getElementById('printable-invoice-container');
+      printContainer.innerHTML = '';
+
+      for (let pIndex = 0; pIndex < totalPages; pIndex++) {
+        const pageItems = items.slice(pIndex * pageSize, (pIndex + 1) * pageSize);
+        const isLastPage = (pIndex === totalPages - 1);
+
+        let tableRowsHtml = '';
+        pageItems.forEach(function(item) {
+          tableRowsHtml += 
+            '<tr style="height: 7.2mm;">' +
+              '<td class="font-bold">' + item.name + '</td>' +
+              '<td class="text-center font-mono font-bold">' + item.qty + '</td>' +
+              '<td class="text-right font-mono">' + item.price.toLocaleString() + '</td>' +
+              '<td class="text-right font-mono font-bold">' + item.amount.toLocaleString() + '</td>' +
+            '</tr>';
+        });
+
+        const emptyRows = pageSize - pageItems.length;
+        for (let er = 0; er < emptyRows; er++) {
+          tableRowsHtml += 
+            '<tr style="height: 7.2mm;">' +
+              '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
+            '</tr>';
+        }
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
+        pageDiv.innerHTML = 
+          '<div class="flex justify-between items-start border-b border-black pb-1 mb-1">' +
+            '<div>' +
+              '<h1 class="text-lg font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
+              '<p class="text-[10px] leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
+              '<p class="text-[10px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
+            '</div>' +
+            '<div class="text-center pt-0.5">' +
+              '<h2 class="text-2xl font-black tracking-widest border-b-2 border-black pb-0.5 px-3">銷 貨 單</h2>' +
+              '<div class="text-[10px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
+            '</div>' +
+            '<div class="text-right text-[10px] leading-tight space-y-0.5">' +
+              '<div>業務人員：<span class="font-bold">' + salesName + '</span></div>' +
+              '<div>課稅別：<span class="font-bold">應稅</span></div>' +
+              '<div>銷貨單號：<span class="font-mono font-bold">' + invoiceNo + '</span></div>' +
+              '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-2 text-[10.5px] leading-tight border border-black p-1.5 mb-1 bg-white">' +
+            '<div>' +
+              '<div>客戶名稱：<strong class="text-[11px]">' + clientName + '</strong></div>' +
+              '<div>統一編號：<span class="font-mono">' + (c.taxId || '') + '</span></div>' +
+              '<div>送貨地址：<span>' + (c.address || '') + '</span></div>' +
+            '</div>' +
+            '<div class="pl-2">' +
+              '<div>聯 絡 人：<span>' + (c.contact || '') + '</span></div>' +
+              '<div>聯絡電話：<span class="font-mono">' + (c.phone || '') + '</span></div>' +
+              '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<table class="invoice-table text-[10.5px] mb-1">' +
+            '<thead>' +
+              '<tr class="bg-gray-100 text-center font-bold">' +
+                '<th style="width: 45%;">品名規格 / 圖號</th>' +
+                '<th style="width: 13%;">數量</th>' +
+                '<th style="width: 17%;">單價</th>' +
+                '<th style="width: 25%;">金額</th>' +
+              '</tr>' +
+            '</thead>' +
+            '<tbody>' + tableRowsHtml + '</tbody>' +
+          '</table>' +
+          '<div class="border border-black px-2 py-1 text-[11px] font-mono flex justify-between items-center mb-1">' +
+            '<div>數量總計：<strong class="text-xs">' + (isLastPage ? totalQty : '(續下頁)') + '</strong> PCS</div>' +
+            '<div>合 &nbsp; 計：<span>' + (isLastPage ? subtotal.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>稅 &nbsp; 額：<span>' + (isLastPage ? tax.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>總 &nbsp; 計：<strong class="text-sm font-bold">' + (isLastPage ? grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-12 border border-black" style="height: 22mm;">' +
+            '<div class="col-span-7 p-1.5 border-r border-black flex flex-col justify-between text-[10.5px]">' +
+              '<div class="font-bold">備註：<span class="font-normal">' + notes + '</span></div>' +
+              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+            '</div>' +
+            '<div class="col-span-5 p-1.5 flex flex-col justify-between text-[10.5px]">' +
+              '<div class="font-bold">客戶簽章：</div>' +
+              '<div class="text-center text-[10px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
+            '</div>' +
+          '</div>';
+        printContainer.appendChild(pageDiv);
       }
-      itemsBody.innerHTML = rowsHtml;
 
-      document.getElementById('inv-print-total-qty').innerText = qty;
-      document.getElementById('inv-print-subtotal').innerText = subtotal.toLocaleString();
-      document.getElementById('inv-print-tax').innerText = tax.toLocaleString();
-      document.getElementById('inv-print-grand-total').innerText = grandTotal.toLocaleString();
-      document.getElementById('inv-print-notes').innerText = notes;
-
-      const record = { invoiceNo, invoiceDate, clientName, salesName, itemName, qty, price, subtotal, tax, grandTotal, notes };
+      const record = { invoiceNo: invoiceNo, invoiceDate: invoiceDate, clientName: clientName, salesName: salesName, items: items, totalQty: totalQty, subtotal: subtotal, tax: tax, grandTotal: grandTotal, notes: notes, totalPages: totalPages };
       invoices.unshift(record);
-      localStorage.setItem('zh_cnc_invoices_v18', JSON.stringify(invoices));
+      localStorage.setItem('zh_cnc_invoices_v21', JSON.stringify(invoices));
       renderInvoicesTable();
       closeModal('invoice-modal');
 
-      setTimeout(() => {
+      setTimeout(function() {
         window.print();
-        showNotification("銷貨單列印完成", `單號【${invoiceNo}】已套印完成！`);
+        showNotification("銷貨單列印完成", "單號【" + invoiceNo + "】共 " + totalPages + " 頁套印完成！");
       }, 300);
     }
 
@@ -1285,70 +1377,132 @@
         b.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500 font-sans">尚無開立銷貨單記錄</td></tr>';
         return;
       }
-      invoices.forEach((inv, idx) => {
-        b.innerHTML += `
-          <tr>
-            <td class="p-3 text-cyan-400 font-bold">${inv.invoiceNo}</td>
-            <td class="p-3 text-slate-400">${inv.invoiceDate}</td>
-            <td class="p-3 font-sans font-bold text-white">${inv.clientName}</td>
-            <td class="p-3 font-sans text-indigo-300 font-bold">${inv.salesName || '徐佩萱'}</td>
-            <td class="p-3 font-sans text-slate-300">${inv.itemName}</td>
-            <td class="p-3 text-emerald-400 font-bold">${inv.qty} PCS</td>
-            <td class="p-3 font-bold text-amber-300">${inv.grandTotal.toLocaleString()}</td>
-            <td class="p-3 text-right">
-              <button onclick="reprintInvoice(${idx})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded font-sans font-bold text-xs"><i class="ph-bold ph-printer"></i> 補印</button>
-            </td>
-          </tr>
-        `;
+      invoices.forEach(function(inv, idx) {
+        const itemsCount = inv.items ? inv.items.length : 1;
+        b.innerHTML += 
+          '<tr>' +
+            '<td class="p-3 text-cyan-400 font-bold">' + inv.invoiceNo + '</td>' +
+            '<td class="p-3 text-slate-400">' + inv.invoiceDate + '</td>' +
+            '<td class="p-3 font-sans font-bold text-white">' + inv.clientName + '</td>' +
+            '<td class="p-3 font-sans text-indigo-300 font-bold">' + (inv.salesName || '徐佩萱') + '</td>' +
+            '<td class="p-3 font-sans text-slate-300">' + itemsCount + ' 筆品項 ' + (inv.totalPages > 1 ? '(' + inv.totalPages + ' 頁)' : '') + '</td>' +
+            '<td class="p-3 text-emerald-400 font-bold">' + (inv.totalQty || inv.qty) + ' PCS</td>' +
+            '<td class="p-3 font-bold text-amber-300">' + inv.grandTotal.toLocaleString() + '</td>' +
+            '<td class="p-3 text-right">' +
+              '<button onclick="reprintInvoice(' + idx + ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded font-sans font-bold text-xs"><i class="ph-bold ph-printer"></i> 補印</button>' +
+            '</td>' +
+          '</tr>';
       });
     }
 
     function reprintInvoice(idx) {
       const inv = invoices[idx];
       if (!inv) return;
-      document.getElementById('inv-print-no').innerText = inv.invoiceNo;
+      
+      const items = inv.items || [{ name: inv.itemName, qty: inv.qty, price: inv.price, amount: inv.subtotal }];
+      const c = clients.find(function(x) { return x.name === inv.clientName; }) || {};
       const dParts = inv.invoiceDate.split('-');
-      document.getElementById('inv-print-date').innerText = `${dParts[0]} 年 ${dParts[1]} 月 ${dParts[2]} 日`;
-      document.getElementById('inv-print-sales').innerText = inv.salesName || '徐佩萱';
-      document.getElementById('inv-print-client-name').innerText = inv.clientName;
-      const c = clients.find(x => x.name === inv.clientName) || {};
-      document.getElementById('inv-print-tax-id').innerText = c.taxId || '';
-      document.getElementById('inv-print-address').innerText = c.address || '';
-      document.getElementById('inv-print-contact').innerText = c.contact || '';
-      document.getElementById('inv-print-phone').innerText = c.phone || '';
-      document.getElementById('inv-print-fax').innerText = c.fax || '';
+      const formattedDate = dParts[0] + ' 年 ' + dParts[1] + ' 月 ' + dParts[2] + ' 日';
 
-      let rowsHtml = `
-        <tr style="height: 7.2mm;">
-          <td class="font-bold">${inv.itemName}</td>
-          <td class="text-center font-mono font-bold">${inv.qty}</td>
-          <td class="text-right font-mono">${inv.price.toLocaleString()}</td>
-          <td class="text-right font-mono font-bold">${inv.subtotal.toLocaleString()}</td>
-        </tr>
-      `;
-      for (let i = 0; i < 5; i++) {
-        rowsHtml += `
-          <tr style="height: 7.2mm;">
-            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-          </tr>
-        `;
+      const pageSize = 6;
+      const totalPages = Math.ceil(items.length / pageSize);
+      const printContainer = document.getElementById('printable-invoice-container');
+      printContainer.innerHTML = '';
+
+      for (let pIndex = 0; pIndex < totalPages; pIndex++) {
+        const pageItems = items.slice(pIndex * pageSize, (pIndex + 1) * pageSize);
+        const isLastPage = (pIndex === totalPages - 1);
+
+        let tableRowsHtml = '';
+        pageItems.forEach(function(item) {
+          tableRowsHtml += 
+            '<tr style="height: 7.2mm;">' +
+              '<td class="font-bold">' + item.name + '</td>' +
+              '<td class="text-center font-mono font-bold">' + item.qty + '</td>' +
+              '<td class="text-right font-mono">' + item.price.toLocaleString() + '</td>' +
+              '<td class="text-right font-mono font-bold">' + item.amount.toLocaleString() + '</td>' +
+            '</tr>';
+        });
+
+        const emptyRows = pageSize - pageItems.length;
+        for (let er = 0; er < emptyRows; er++) {
+          tableRowsHtml += 
+            '<tr style="height: 7.2mm;">' +
+              '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
+            '</tr>';
+        }
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
+        pageDiv.innerHTML = 
+          '<div class="flex justify-between items-start border-b border-black pb-1 mb-1">' +
+            '<div>' +
+              '<h1 class="text-lg font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
+              '<p class="text-[10px] leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
+              '<p class="text-[10px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
+            '</div>' +
+            '<div class="text-center pt-0.5">' +
+              '<h2 class="text-2xl font-black tracking-widest border-b-2 border-black pb-0.5 px-3">銷 貨 單</h2>' +
+              '<div class="text-[10px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
+            '</div>' +
+            '<div class="text-right text-[10px] leading-tight space-y-0.5">' +
+              '<div>業務人員：<span class="font-bold">' + (inv.salesName || '徐佩萱') + '</span></div>' +
+              '<div>課稅別：<span class="font-bold">應稅</span></div>' +
+              '<div>銷貨單號：<span class="font-mono font-bold">' + inv.invoiceNo + '</span></div>' +
+              '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-2 text-[10.5px] leading-tight border border-black p-1.5 mb-1 bg-white">' +
+            '<div>' +
+              '<div>客戶名稱：<strong class="text-[11px]">' + inv.clientName + '</strong></div>' +
+              '<div>統一編號：<span class="font-mono">' + (c.taxId || '') + '</span></div>' +
+              '<div>送貨地址：<span>' + (c.address || '') + '</span></div>' +
+            '</div>' +
+            '<div class="pl-2">' +
+              '<div>聯 絡 人：<span>' + (c.contact || '') + '</span></div>' +
+              '<div>聯絡電話：<span class="font-mono">' + (c.phone || '') + '</span></div>' +
+              '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<table class="invoice-table text-[10.5px] mb-1">' +
+            '<thead>' +
+              '<tr class="bg-gray-100 text-center font-bold">' +
+                '<th style="width: 45%;">品名規格 / 圖號</th>' +
+                '<th style="width: 13%;">數量</th>' +
+                '<th style="width: 17%;">單價</th>' +
+                '<th style="width: 25%;">金額</th>' +
+              '</tr>' +
+            '</thead>' +
+            '<tbody>' + tableRowsHtml + '</tbody>' +
+          '</table>' +
+          '<div class="border border-black px-2 py-1 text-[11px] font-mono flex justify-between items-center mb-1">' +
+            '<div>數量總計：<strong class="text-xs">' + (isLastPage ? (inv.totalQty || inv.qty) : '(續下頁)') + '</strong> PCS</div>' +
+            '<div>合 &nbsp; 計：<span>' + (isLastPage ? inv.subtotal.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>稅 &nbsp; 額：<span>' + (isLastPage ? inv.tax.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>總 &nbsp; 計：<strong class="text-sm font-bold">' + (isLastPage ? inv.grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-12 border border-black" style="height: 22mm;">' +
+            '<div class="col-span-7 p-1.5 border-r border-black flex flex-col justify-between text-[10.5px]">' +
+              '<div class="font-bold">備註：<span class="font-normal">' + (inv.notes || '') + '</span></div>' +
+              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+            '</div>' +
+            '<div class="col-span-5 p-1.5 flex flex-col justify-between text-[10.5px]">' +
+              '<div class="font-bold">客戶簽章：</div>' +
+              '<div class="text-center text-[10px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
+            '</div>' +
+          '</div>';
+        printContainer.appendChild(pageDiv);
       }
-      document.getElementById('inv-print-items-body').innerHTML = rowsHtml;
-      document.getElementById('inv-print-total-qty').innerText = inv.qty;
-      document.getElementById('inv-print-subtotal').innerText = inv.subtotal.toLocaleString();
-      document.getElementById('inv-print-tax').innerText = inv.tax.toLocaleString();
-      document.getElementById('inv-print-grand-total').innerText = inv.grandTotal.toLocaleString();
-      document.getElementById('inv-print-notes').innerText = inv.notes;
 
-      setTimeout(() => window.print(), 200);
+      setTimeout(function() { window.print(); }, 200);
     }
 
     function switchView(view) {
-      ['office','invoices','clients','quality','outsource','shopfloor'].forEach(v => {
-        const el = document.getElementById(`${v}-view`);
-        if(el) el.classList.toggle('hidden', v !== view);
-        const btn = document.getElementById(`view-btn-${v}`);
-        if(btn) {
+      ['office','invoices','clients','quality','outsource','shopfloor'].forEach(function(v) {
+        const el = document.getElementById(v + '-view');
+        if (el) el.classList.toggle('hidden', v !== view);
+        const btn = document.getElementById('view-btn-' + v);
+        if (btn) {
           btn.className = v === view ? 
             "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold bg-cyan-600 text-white shadow-md whitespace-nowrap" :
             "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white whitespace-nowrap";
@@ -1368,9 +1522,9 @@
       const s = document.getElementById('form-customer-select');
       if (!s) return;
       s.innerHTML = '';
-      clients.forEach(c => {
+      clients.forEach(function(c) {
         const opt = document.createElement('option');
-        opt.value = c.name; opt.innerText = `${c.name} (${c.id})`;
+        opt.value = c.name; opt.innerText = c.name + ' (' + c.id + ')';
         s.appendChild(opt);
       });
     }
@@ -1379,7 +1533,7 @@
       const s = document.getElementById('board-client-filter');
       if (!s) return;
       s.innerHTML = '<option value="ALL">全部客戶</option>';
-      clients.forEach(c => {
+      clients.forEach(function(c) {
         const opt = document.createElement('option');
         opt.value = c.name; opt.innerText = c.name;
         s.appendChild(opt);
@@ -1390,7 +1544,7 @@
       const s = document.getElementById('form-material');
       if (!s) return;
       s.innerHTML = '';
-      materials.forEach(m => {
+      materials.forEach(function(m) {
         const opt = document.createElement('option');
         opt.value = m.name; opt.innerText = m.name;
         s.appendChild(opt);
@@ -1423,36 +1577,35 @@
         payment: document.getElementById('client-payment').value.trim()
       };
       clients.push(clientData);
-      localStorage.setItem('zh_cnc_clients_v18', JSON.stringify(clients));
+      localStorage.setItem('zh_cnc_clients_v21', JSON.stringify(clients));
       closeModal('add-client-modal');
       refreshCustomerSelectDropdown();
       refreshBoardClientFilter();
       renderClientsView();
-      showNotification("客戶已保存", `客戶【${clientData.name}】已建立！`);
+      showNotification("客戶已保存", "客戶【" + clientData.name + "】已建立！");
     }
 
     function renderClientsView() {
       const g = document.getElementById('clients-cards-grid');
       if (!g) return;
       g.innerHTML = '';
-      document.getElementById('client-stat-total').innerText = `${clients.length} 家`;
-      clients.forEach(c => {
-        g.innerHTML += `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="font-mono text-cyan-400 font-bold text-xs bg-slate-950 px-2 py-0.5 rounded border border-slate-800">${c.id}</span>
-                <span class="text-slate-400 text-xs ml-1 font-mono">${c.taxId ? `統編: ${c.taxId}` : ''}</span>
-                <h3 class="font-bold text-white text-base mt-1">${c.name}</h3>
-              </div>
-            </div>
-            <div class="text-xs text-slate-300 space-y-1">
-              <div>窗口: ${c.contact || '--'} | 電話: ${c.phone || '--'}</div>
-              <div>傳真: ${c.fax || '--'}</div>
-              <div class="text-slate-400 truncate">地址: ${c.address || '--'}</div>
-            </div>
-          </div>
-        `;
+      document.getElementById('client-stat-total').innerText = clients.length + " 家";
+      clients.forEach(function(c) {
+        g.innerHTML += 
+          '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">' +
+            '<div class="flex justify-between items-start">' +
+              '<div>' +
+                '<span class="font-mono text-cyan-400 font-bold text-xs bg-slate-950 px-2 py-0.5 rounded border border-slate-800">' + c.id + '</span>' +
+                '<span class="text-slate-400 text-xs ml-1 font-mono">' + (c.taxId ? '統編: ' + c.taxId : '') + '</span>' +
+                '<h3 class="font-bold text-white text-base mt-1">' + c.name + '</h3>' +
+              '</div>' +
+            '</div>' +
+            '<div class="text-xs text-slate-300 space-y-1">' +
+              '<div>窗口: ' + (c.contact || '--') + ' | 電話: ' + (c.phone || '--') + '</div>' +
+              '<div>傳真: ' + (c.fax || '--') + '</div>' +
+              '<div class="text-slate-400 truncate">地址: ' + (c.address || '--') + '</div>' +
+            '</div>' +
+          '</div>';
       });
     }
 
@@ -1470,11 +1623,11 @@
       const contact = document.getElementById('vendor-contact').value.trim();
       const phone = document.getElementById('vendor-phone').value.trim();
 
-      vendors.push({ name, type, contact, phone });
-      localStorage.setItem('zh_cnc_vendors_v18', JSON.stringify(vendors));
+      vendors.push({ name: name, type: type, contact: contact, phone: phone });
+      localStorage.setItem('zh_cnc_vendors_v21', JSON.stringify(vendors));
       closeModal('add-vendor-modal');
       refreshOutsourceVendorDropdown();
-      showNotification("外包廠已儲存", `協力廠【${name}】資料已由辦公室鎖定存檔！`);
+      showNotification("外包廠已儲存", "協力廠【" + name + "】資料已由辦公室鎖定存檔！");
     }
 
     function refreshOutsourceVendorDropdown() {
@@ -1485,10 +1638,10 @@
         select.innerHTML = '<option value="">尚無廠商，請由辦公室建立</option>';
         return;
       }
-      vendors.forEach(v => {
+      vendors.forEach(function(v) {
         const opt = document.createElement('option');
         opt.value = v.name;
-        opt.innerText = `${v.name} (${v.type})`;
+        opt.innerText = v.name + ' (' + v.type + ')';
         select.appendChild(opt);
       });
     }
@@ -1497,10 +1650,10 @@
       const s = document.getElementById('outsource-process');
       if (!s) return;
       s.innerHTML = '';
-      outsourceProcesses.forEach(p => {
+      outsourceProcesses.forEach(function(p) {
         const opt = document.createElement('option');
         opt.value = p.name;
-        opt.innerText = `${p.name} [${p.type}]`;
+        opt.innerText = p.name + ' [' + p.type + ']';
         s.appendChild(opt);
       });
     }
@@ -1508,15 +1661,15 @@
     function openDispatchOutsourceModal() {
       const s = document.getElementById('outsource-order-select');
       s.innerHTML = '';
-      const list = orders.filter(o => o.status !== '外包中' && !o.isArchived);
+      const list = orders.filter(function(o) { return o.status !== '外包中' && !o.isArchived; });
       if (list.length === 0) {
         alert("目前所有工單皆已在外包中或尚無可外包工單！");
         return;
       }
-      list.forEach(o => {
+      list.forEach(function(o) {
         const opt = document.createElement('option');
         opt.value = o.id;
-        opt.innerText = `${o.id} - ${o.partName} [${o.customer}]`;
+        opt.innerText = o.id + ' - ' + o.partName + ' [' + o.customer + ']';
         s.appendChild(opt);
       });
       const d = new Date(); d.setDate(d.getDate() + 3);
@@ -1534,77 +1687,78 @@
       const specs = document.getElementById('outsource-specs').value;
 
       if (!vendor) { alert("請先由辦公室建立外包廠商！"); return; }
-      const outData = { vendor, process, sentQty: qty, expectedDate, specs, sentDate: new Date().toISOString().split('T')[0] };
+      const outData = { vendor: vendor, process: process, sentQty: qty, expectedDate: expectedDate, specs: specs, sentDate: new Date().toISOString().split('T')[0] };
 
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('請將剛才複製') !== -1) {
-        const o = orders.find(x => String(x.id).trim() === orderId);
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: "update_status", orderId: orderId, status: "外包中", outsourceData: outData })
+        });
+        closeModal('dispatch-outsource-modal');
+        fetchCloudData();
+        showNotification("外包單已登記", "工單 " + orderId + " 已發往 " + vendor);
+      } catch (err) {
+        const o = orders.find(function(x) { return String(x.id).trim() === orderId; });
         if (o) {
           o.status = "外包中";
           o.outsourceData = outData;
-          localStorage.setItem('zh_cnc_local_orders_v18', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v21', JSON.stringify(orders));
         }
         closeModal('dispatch-outsource-modal');
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
         renderOutsourceBoard();
-        showNotification("外包單已登記", `工單 ${orderId} 已發往 ${vendor}`);
-        return;
+        showNotification("本地已登記", "工單 " + orderId + " 外包紀錄已暫存本機！");
       }
-
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: "update_status", orderId, status: "外包中", outsourceData: outData })
-      });
-      closeModal('dispatch-outsource-modal');
-      fetchCloudData();
     }
 
     function renderOutsourceBoard() {
       const b = document.getElementById('outsource-table-body');
       if (!b) return;
       b.innerHTML = '';
-      orders.filter(o => o.status === '外包中').forEach(o => {
+      orders.filter(function(o) { return o.status === '外包中'; }).forEach(function(o) {
         const d = o.outsourceData || {};
-        b.innerHTML += `<tr>
-          <td class="p-3 text-cyan-400 font-mono">${o.id}<div class="text-[11px] text-slate-300 font-sans">${o.partName}</div></td>
-          <td class="p-3">${o.customer}</td>
-          <td class="p-3 font-bold text-white">${d.vendor || '外包廠'}</td>
-          <td class="p-3 text-purple-300">${d.process || '表面處理'}</td>
-          <td class="p-3 font-mono">${d.sentQty || o.targetQty} PCS</td>
-          <td class="p-3 font-mono text-slate-400">${d.sentDate || '--'}</td>
-          <td class="p-3 font-mono text-amber-300 font-bold">${d.expectedDate || o.dueDate}</td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-purple-950 text-purple-300 border border-purple-800">外包中</span></td>
-          <td class="p-3 text-right"><button onclick="workerQuickStatus('${o.id}', '已完成')" class="px-3 py-1 bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs">驗收入庫</button></td>
-        </tr>`;
+        b.innerHTML += 
+          '<tr>' +
+            '<td class="p-3 text-cyan-400 font-mono">' + o.id + '<div class="text-[11px] text-slate-300 font-sans">' + o.partName + '</div></td>' +
+            '<td class="p-3">' + o.customer + '</td>' +
+            '<td class="p-3 font-bold text-white">' + (d.vendor || '外包廠') + '</td>' +
+            '<td class="p-3 text-purple-300">' + (d.process || '表面處理') + '</td>' +
+            '<td class="p-3 font-mono">' + (d.sentQty || o.targetQty) + ' PCS</td>' +
+            '<td class="p-3 font-mono text-slate-400">' + (d.sentDate || '--') + '</td>' +
+            '<td class="p-3 font-mono text-amber-300 font-bold">' + (d.expectedDate || o.dueDate) + '</td>' +
+            '<td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-purple-950 text-purple-300 border border-purple-800">外包中</span></td>' +
+            '<td class="p-3 text-right"><button onclick="workerQuickStatus(\'' + o.id + '\', \'已完成\')" class="px-3 py-1 bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs">驗收入庫</button></td>' +
+          '</tr>';
       });
       if (!b.innerHTML) b.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-500">目前尚無外包處理中工單</td></tr>';
     }
 
     function exportCompletedOrdersCSV() {
-      const list = orders.filter(o => o.status === '已完成' || o.isArchived);
+      const list = orders.filter(function(o) { return o.status === '已完成' || o.isArchived; });
       if (list.length === 0) { alert("無完工工單可匯出！"); return; }
       let csv = "\uFEFF工單號碼,零件名稱,客戶名稱,材質,機台,數量,交期,狀態,更新時間\r\n";
-      list.forEach(o => { csv += `${o.id},${o.partName},${o.customer},${o.material},${o.machine},${o.targetQty},${o.dueDate},${o.status},${o.statusTime}\r\n`; });
-      downloadCSV(csv, `誌宏機械_完工紀錄_${new Date().toISOString().split('T')[0]}.csv`);
+      list.forEach(function(o) { csv += o.id + "," + o.partName + "," + o.customer + "," + o.material + "," + o.machine + "," + o.targetQty + "," + o.dueDate + "," + o.status + "," + o.statusTime + "\r\n"; });
+      downloadCSV(csv, "誌宏機械_完工紀錄_" + new Date().toISOString().split('T')[0] + ".csv");
     }
     function exportOutsourceOrdersCSV() {
       let csv = "\uFEFF工單號碼,零件名稱,客戶,外包廠,項目,數量,送出日,預計回廠\r\n";
-      orders.filter(o => o.status === '外包中').forEach(o => {
+      orders.filter(function(o) { return o.status === '外包中'; }).forEach(function(o) {
         const d = o.outsourceData || {};
-        csv += `${o.id},${o.partName},${o.customer},${d.vendor||''},${d.process||''},${d.sentQty||o.targetQty},${d.sentDate||''},${d.expectedDate||''}\r\n`;
+        csv += o.id + "," + o.partName + "," + o.customer + "," + (d.vendor||'') + "," + (d.process||'') + "," + (d.sentQty||o.targetQty) + "," + (d.sentDate||'') + "," + (d.expectedDate||'') + "\r\n";
       });
-      downloadCSV(csv, `誌宏機械_外包清單_${new Date().toISOString().split('T')[0]}.csv`);
+      downloadCSV(csv, "誌宏機械_外包清單_" + new Date().toISOString().split('T')[0] + ".csv");
     }
     function exportDefectsToCSV() {
       let csv = "\uFEFF工單號碼,零件名稱,機台,報廢數量,人員,提報時間\r\n";
-      orders.forEach(o => { if(o.completionData && o.completionData.defectQty > 0) csv += `${o.id},${o.partName},${o.machine},${o.completionData.defectQty},${o.completionData.operator},${o.statusTime}\r\n`; });
-      downloadCSV(csv, `誌宏機械_不良品報表_${new Date().toISOString().split('T')[0]}.csv`);
+      orders.forEach(function(o) { if (o.completionData && o.completionData.defectQty > 0) csv += o.id + "," + o.partName + "," + o.machine + "," + o.completionData.defectQty + "," + o.completionData.operator + "," + o.statusTime + "\r\n"; });
+      downloadCSV(csv, "誌宏機械_不良品報表_" + new Date().toISOString().split('T')[0] + ".csv");
     }
     function downloadCSV(content, filename) {
       const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-      showNotification("報表已下載", `檔案【${filename}】已存檔至電腦。`);
+      showNotification("報表已下載", "檔案【" + filename + "】已存檔至電腦。");
     }
   </script>
 </body>
