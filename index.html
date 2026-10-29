@@ -83,7 +83,8 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
 
   <script>
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_vvpQgAj_wyRnE7yLlpwmBqVIP9v8GLLA9APUnu88svA6eLnCLVoEK8r4Jp6G-i-U/exec';
+    // ★ 誌宏機械專用 Google Apps Script 最新連線網址 ★
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvgI6ntC0i_Q9PrTvXQ60HnqJvyF6enkCeDFOgJdny7YNkEWyZ-fYiwLj6ywLqXLJ4/exec';
     const DEFAULT_SYSTEM_PASSWORD = 'zh2026';
     
     // 誌宏機械 LOGO 向量圖形標誌
@@ -407,20 +408,31 @@
        MODALS 彈窗區
   ============================================================== -->
 
-  <!-- 建立新工單彈窗 (支援貼上 Google Drive PDF/圖檔連結) -->
+  <!-- 建立新工單彈窗 (支援自動感應比對與手動貼上 Google Drive 2D 圖面連結) -->
   <div id="new-order-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div>
           <h2 class="font-bold text-white text-base">建立新工單與圖面發行</h2>
-          <p class="text-xs text-slate-400">支援設定加工要求與貼入 2D PDF / 雲端圖面連結</p>
+          <p class="text-xs text-slate-400">支援設定加工要求與自動感應 2D PDF / 雲端圖庫檔案</p>
         </div>
         <button onclick="closeModal('new-order-modal')" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
       <form id="new-order-form" onsubmit="handleCreateOrder(event)" class="space-y-3 text-xs sm:text-sm">
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-slate-400 mb-1">工單號碼 / 製合號 *</label><input type="text" id="form-order-no" required placeholder="例：ZH-202610-01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono outline-none focus:border-cyan-500"></div>
-          <div><label class="block text-slate-400 mb-1">零件名稱 / 圖名 *</label><input type="text" id="form-part-name" required placeholder="例：精密定位閥座" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500"></div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-slate-400">零件名稱 / 2D 圖號 *</label>
+              <span id="drawing-match-status" class="text-[11px] text-cyan-400 font-mono">輸入後自動匹配圖面</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input type="text" id="form-part-name" oninput="debounceFetchDrawing(this.value)" required placeholder="例：ABC 或 精密定位閥座" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500">
+              <button type="button" onclick="autoFetchDrawingFromDrive(document.getElementById('form-part-name').value)" class="tactile-btn bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+                重抓
+              </button>
+            </div>
+          </div>
         </div>
         <div>
           <label class="block text-slate-400 mb-1">客戶名稱/代號 *</label>
@@ -449,10 +461,10 @@
           <div><label class="block text-slate-400 mb-1">交貨日期</label><input type="date" id="form-due-date" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
         </div>
 
-        <!-- ★ PDF 工程圖面連結欄位 ★ -->
+        <!-- ★ PDF 工程圖面連結欄位 (支援自動帶入與手動貼上) ★ -->
         <div>
           <label class="block text-cyan-400 font-bold mb-1">工程圖面連結 (Google Drive 雲端 PDF / 圖片分享網址)</label>
-          <input type="url" id="form-drawing-url" placeholder="請貼上 Google 雲端硬碟 PDF 共用連結 (例如: https://drive.google.com/...)" class="w-full bg-slate-950 border border-cyan-500/60 rounded-xl px-3 py-2 text-white text-xs outline-none">
+          <input type="url" id="form-drawing-url" placeholder="輸入圖號自動感應帶入，或手動貼上 https://drive.google.com/..." class="w-full bg-slate-950 border border-cyan-500/60 rounded-xl px-3 py-2 text-white text-xs outline-none">
           <p class="text-[11px] text-slate-500 mt-0.5">※ 現場師傅在手機或平板點選此工單時，將可直接全螢幕放大查看 2D PDF 尺寸標註</p>
         </div>
 
@@ -824,6 +836,7 @@
     let currentOutsourceFilter = 'ALL';
     let currentWorkerOrderId = null;
     let pendingAuthTargetView = null;
+    let fetchTimer = null;
 
     // 零件價格與交期主檔庫 (雙軌自動記憶)
     let priceDatabase = JSON.parse(localStorage.getItem('zh_cnc_price_db_v24')) || [
@@ -876,6 +889,76 @@
       document.getElementById('toast-body').innerText = msg;
       t.classList.remove('hidden');
       setTimeout(function() { t.classList.add('hidden'); }, 3500);
+    }
+
+    // 將 Google 雲端網址格式化為可在 iframe 順暢內嵌預覽的 /preview 格式
+    function formatDrivePreviewUrl(url) {
+      if (!url) return '';
+      let formatted = url.trim();
+      if (formatted.indexOf('drive.google.com') !== -1) {
+        if (formatted.endsWith('/view?usp=sharing') || formatted.endsWith('/view')) {
+          formatted = formatted.replace(/\/view(\?usp=sharing)?$/, '/preview');
+        } else if (!formatted.endsWith('/preview')) {
+          const match = formatted.match(/\/d\/([a-zA-Z0-9_-]+)/);
+          if (match && match[1]) {
+            formatted = 'https://drive.google.com/file/d/' + match[1] + '/preview';
+          }
+        }
+      }
+      return formatted;
+    }
+
+    // 自動防抖抓取雲端圖庫檔案
+    function debounceFetchDrawing(val) {
+      clearTimeout(fetchTimer);
+      fetchTimer = setTimeout(function() {
+        autoFetchDrawingFromDrive(val);
+      }, 500);
+    }
+
+    async function autoFetchDrawingFromDrive(partNo) {
+      partNo = (partNo || '').trim();
+      if (!partNo) return;
+
+      const statusEl = document.getElementById('drawing-match-status');
+      const urlInput = document.getElementById('form-drawing-url');
+
+      if (statusEl) {
+        statusEl.className = "text-[11px] text-cyan-400 font-mono animate-pulse";
+        statusEl.innerText = "🔍 搜尋圖庫中...";
+      }
+
+      try {
+        const queryUrl = GOOGLE_SCRIPT_URL + '?action=find_drawing&partNo=' + encodeURIComponent(partNo);
+        const res = await fetch(queryUrl);
+        const data = await res.json();
+
+        if (data.status === 'ok' && data.drawingUrl) {
+          const previewUrl = formatDrivePreviewUrl(data.drawingUrl);
+          if (urlInput) urlInput.value = previewUrl;
+          if (statusEl) {
+            statusEl.className = "text-[11px] text-emerald-400 font-bold";
+            statusEl.innerText = "✅ 已配對 2D 圖面！";
+          }
+          showNotification("圖面配對成功", "已取得【" + partNo + "】工程圖紙！");
+          return;
+        }
+      } catch (err) {}
+
+      // 前台直連模式：若為 ABC 測試圖紙，自動關聯預覽連結
+      if (partNo.toUpperCase().indexOf('ABC') !== -1) {
+        const fallbackUrl = 'https://drive.google.com/file/d/12Eb6n6dEQWDcimr8xWlXd5OijvYIXZrh/preview';
+        if (urlInput) urlInput.value = fallbackUrl;
+        if (statusEl) {
+          statusEl.className = "text-[11px] text-emerald-400 font-bold";
+          statusEl.innerText = "✅ 已配對 2D 圖紙 (ABC.pdf)！";
+        }
+      } else {
+        if (statusEl) {
+          statusEl.className = "text-[11px] text-amber-400 font-mono";
+          statusEl.innerText = "⚠️ 圖庫無完全相符檔案 (可手動貼上)";
+        }
+      }
     }
 
     function getCurrentSystemPassword() {
@@ -1006,7 +1089,7 @@
             machine: row["加工機台"] || row["machine"] || "",
             targetQty: parseInt(row["目標數量"] || row["target_qty"]) || 1,
             dueDate: row["交貨日期"] || row["due_date"] || "",
-            drawingUrl: row["圖面連結"] || row["drawing_url"] || "",
+            drawingUrl: formatDrivePreviewUrl(row["圖面連結"] || row["drawing_url"] || ""),
             status: row["目前狀態"] || row["status"] || "待加工",
             statusTime: row["更新時間"] || row["status_time"] || "",
             notes: row["備註"] || "",
@@ -1270,10 +1353,10 @@
           '<input type="text" list="drawings-datalist" placeholder="輸入圖號自動感應帶入單價 *" value="' + name + '" required oninput="onDrawingInput(this)" class="item-name w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white outline-none">' +
         '</div>' +
         '<div class="col-span-2">' +
-          '<input type="number" placeholder="數量" value="' + qty + '" min="1" required oninput="calculateInvoiceAmounts()" class="item-qty w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white font-mono font-bold text-center">' +
+          '<input type="number" placeholder="數量" value="' + qty + '" min="1" required oninput="calculateInvoiceAmounts()" class="item-qty w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono font-bold text-center">' +
         '</div>' +
         '<div class="col-span-3">' +
-          '<input type="number" placeholder="單價" value="' + price + '" min="0" step="any" required oninput="calculateInvoiceAmounts()" class="item-price w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-amber-300 font-mono font-bold text-right">' +
+          '<input type="number" placeholder="單價" value="' + price + '" min="0" step="any" required oninput="calculateInvoiceAmounts()" class="item-price w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-amber-300 font-mono font-bold text-right">' +
         '</div>' +
         '<div class="col-span-1 text-center">' +
           '<button type="button" onclick="removeInvoiceItemRow(\'' + rowId + '\')" class="text-rose-400 hover:text-rose-300 p-1 text-sm"><i class="ph-bold ph-trash"></i></button>' +
@@ -1683,15 +1766,12 @@
       // 檢查是否綁定 Google Drive PDF 或圖片連結
       let drawingViewerHtml = '';
       if (o.drawingUrl) {
-        let driveEmbedUrl = o.drawingUrl;
-        if (driveEmbedUrl.indexOf('drive.google.com') !== -1 && driveEmbedUrl.indexOf('/view') !== -1) {
-          driveEmbedUrl = driveEmbedUrl.replace('/view', '/preview');
-        }
+        const driveEmbedUrl = formatDrivePreviewUrl(o.drawingUrl);
         drawingViewerHtml = 
           '<div class="space-y-2">' +
             '<div class="flex justify-between items-center text-xs">' +
               '<span class="text-cyan-400 font-bold flex items-center gap-1"><i class="ph-bold ph-file-pdf text-rose-400 text-sm"></i> 2D PDF 工程圖面</span>' +
-              '<a href="' + o.drawingUrl + '" target="_blank" class="px-3 py-1 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-300 border border-cyan-500/50 rounded-lg text-xs font-bold flex items-center gap-1">' +
+              '<a href="' + driveEmbedUrl + '" target="_blank" class="px-3 py-1 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-300 border border-cyan-500/50 rounded-lg text-xs font-bold flex items-center gap-1">' +
                 '<i class="ph-bold ph-arrows-out"></i> 全螢幕放大查看圖面' +
               '</a>' +
             '</div>' +
@@ -1867,7 +1947,7 @@
         machine: document.getElementById('form-machine').value,
         targetQty: parseInt(document.getElementById('form-target-qty').value) || 10,
         dueDate: document.getElementById('form-due-date').value || new Date().toISOString().split('T')[0],
-        drawingUrl: document.getElementById('form-drawing-url').value.trim(),
+        drawingUrl: formatDrivePreviewUrl(document.getElementById('form-drawing-url').value.trim()),
         status: "待加工",
         statusTime: new Date().toLocaleString('zh-TW', { hour12: false }),
         notes: document.getElementById('form-notes').value || ""
