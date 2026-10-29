@@ -83,8 +83,8 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
 
   <script>
-    // ★ 誌宏機械專用 Google Apps Script 最新連線網址 ★
-    const GOOGLE_SCRIPT_URL = 'const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLpLz7vV78MzyUDSGLWoS-F4YTyss2whWiwJddEbUlwt7HbnzXM60ORjqWw_RTJjlf/exec';';
+    // ★ 誌宏機械專用 Google Apps Script 最新已授權網址 ★
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLpLz7vV78MzyUDSGLWoS-F4YTyss2whWiwJddEbUlwt7HbnzXM60ORjqWw_RTJjlf/exec';
     const DEFAULT_SYSTEM_PASSWORD = 'zh2026';
     
     // 誌宏機械 LOGO 向量圖形標誌
@@ -1070,7 +1070,7 @@
 
     async function fetchCloudData(showToast) {
       const badge = document.getElementById('cloud-badge');
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('AKfycbx') === -1) {
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('AKfycby') === -1) {
         orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v24')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
@@ -1078,7 +1078,11 @@
         return;
       }
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'Accept': 'application/json' }
+        });
         const data = await res.json();
         orders = data.map(function(row) {
           return {
@@ -1870,10 +1874,10 @@
             "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white whitespace-nowrap";
         }
       });
-      ['shopfloor','office','outsource'].forEach(function(v) {
-        const mBtn = document.getElementById('m-nav-' + v);
+      ['shopfloor','office','outsource'].forEach(function(m) {
+        const mBtn = document.getElementById('m-nav-' + m);
         if (mBtn) {
-          mBtn.className = v === view ? "flex flex-col items-center gap-0.5 text-cyan-400" : "flex flex-col items-center gap-0.5 text-slate-400";
+          mBtn.className = m === view ? "flex flex-col items-center gap-0.5 text-cyan-400" : "flex flex-col items-center gap-0.5 text-slate-400";
         }
       });
 
