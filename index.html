@@ -29,7 +29,7 @@
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
     /* ==============================================================
-       ★ 中一刀微調版 CSS (top: 6.5mm 下移、195mm 避孔、8 格高度優化) ★
+       ★ 中一刀點陣印表機專用極致版 CSS (防缺筆畫、抗模糊、純黑實打) ★
     ============================================================== */
     @media print {
       @page {
@@ -40,6 +40,8 @@
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       body * {
         visibility: hidden !important;
@@ -63,27 +65,39 @@
         break-after: page !important;
         width: 195mm !important;
         height: 128mm !important;
-        margin-left: 4mm !important;
-        margin-top: 6.5mm !important;
+        margin-left: 5mm !important;
+        margin-top: 5mm !important;
         padding: 0 !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
         color: #000000 !important;
         position: relative !important;
+        /* 點陣印表機最佳字型宣告，避免筆畫斷裂與模糊 */
+        font-family: "MingLiU", "PMingLiU", "新細明體", monospace, sans-serif !important;
+        font-smooth: never !important;
+        -webkit-font-smoothing: none !important;
       }
       .printable-invoice-page:last-child {
         page-break-after: auto !important;
         break-after: auto !important;
       }
+      .invoice-table { 
+        border-collapse: collapse !important; 
+        width: 100% !important; 
+        border: 1.8px solid #000000 !important; 
+      }
+      .invoice-table th, .invoice-table td { 
+        border: 1.2px solid #000000 !important; 
+        padding: 3px 5px !important; 
+        color: #000000 !important;
+      }
     }
-    .invoice-table { border-collapse: collapse; width: 100%; border: 1.5px solid #000; }
-    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 2px 4px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
 
   <script>
-    // ★ 誌宏機械專用 Google Apps Script 最新已授權網址 ★
+    // ★ 誌宏機械專用 Google Apps Script 最新連線網址 ★
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLpLz7vV78MzyUDSGLWoS-F4YTyss2whWiwJddEbUlwt7HbnzXM60ORjqWw_RTJjlf/exec';
     const DEFAULT_SYSTEM_PASSWORD = 'zh2026';
     
@@ -184,7 +198,7 @@
 
   <!-- 主工作區 -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 md:p-6">
-    <!-- VIEW 1: 現場師傅終端 (免密碼，含 PDF 2D 圖面即時檢視) -->
+    <!-- VIEW 1: 現場師傅終端 -->
     <section id="shopfloor-view" class="space-y-4">
       <div class="bg-slate-900 border-2 border-amber-500/60 p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
         <div class="flex items-center gap-3">
@@ -204,7 +218,7 @@
       <div id="shopfloor-content" class="space-y-4"></div>
     </section>
 
-    <!-- VIEW 2: 辦公室看板 (需密碼保護) -->
+    <!-- VIEW 2: 辦公室看板 -->
     <section id="office-view" class="hidden space-y-5">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
         <div>
@@ -252,12 +266,12 @@
       <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4"></div>
     </section>
 
-    <!-- VIEW 3: 銷貨單管理 (辦公室電腦專屬) -->
+    <!-- VIEW 3: 銷貨單管理 -->
     <section id="invoices-view" class="hidden space-y-5">
       <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border-2 border-emerald-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
           <h2 class="text-lg sm:text-xl font-black text-white">中一刀三聯銷貨單管理 (替代 QBoss)</h2>
-          <p class="text-xs text-slate-400">圖號自動帶入單價、版面微調下移、客戶框加大、8 格品名明細自動切頁。</p>
+          <p class="text-xs text-slate-400">大字體、純黑實打防缺筆、客戶寬敞、8 格高彈性排版。</p>
         </div>
         <button onclick="openCreateInvoiceModal()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl tactile-btn flex items-center gap-2 shadow-lg shadow-emerald-600/30">
           <i class="ph-bold ph-plus-circle text-base"></i> 手動開立銷貨單
@@ -283,7 +297,7 @@
       </div>
     </section>
 
-    <!-- VIEW 4: 零件價格與交期資料庫 (雙軌報價庫) -->
+    <!-- VIEW 4: 零件價格庫 -->
     <section id="prices-view" class="hidden space-y-5">
       <div class="bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border-2 border-amber-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
@@ -349,7 +363,7 @@
       <div id="clients-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4"></div>
     </section>
 
-    <!-- VIEW 6: 外包廠追蹤 (四大主分類 + 自建細項工種) -->
+    <!-- VIEW 6: 外包廠追蹤 -->
     <section id="outsource-view" class="hidden space-y-5">
       <div class="bg-gradient-to-r from-purple-950/60 via-slate-900 to-slate-900 border-2 border-purple-800/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
@@ -401,14 +415,14 @@
     </section>
   </main>
 
-  <!-- 中一刀三聯銷貨單列印容器 (動態支援 8 格、客戶加大、備註微縮) -->
+  <!-- 中一刀三聯銷貨單列印容器 -->
   <div id="printable-invoice-container" class="hidden"></div>
 
   <!-- ==============================================================
        MODALS 彈窗區
   ============================================================== -->
 
-  <!-- 建立新工單彈窗 (支援自動感應比對與手動貼上 Google Drive 2D 圖面連結) -->
+  <!-- 建立新工單彈窗 -->
   <div id="new-order-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -461,7 +475,6 @@
           <div><label class="block text-slate-400 mb-1">交貨日期</label><input type="date" id="form-due-date" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
         </div>
 
-        <!-- ★ PDF 工程圖面連結欄位 (支援自動帶入與手動貼上) ★ -->
         <div>
           <label class="block text-cyan-400 font-bold mb-1">工程圖面連結 (Google Drive 雲端 PDF / 圖片分享網址)</label>
           <input type="url" id="form-drawing-url" placeholder="輸入圖號自動感應帶入，或手動貼上 https://drive.google.com/..." class="w-full bg-slate-950 border border-cyan-500/60 rounded-xl px-3 py-2 text-white text-xs outline-none">
@@ -553,7 +566,7 @@
     </div>
   </div>
 
-  <!-- 新增協力廠商彈窗 (兩層分類階層) -->
+  <!-- 新增協力廠商彈窗 -->
   <div id="add-vendor-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-purple-600 w-full max-w-md rounded-2xl p-5 space-y-3 text-xs sm:text-sm">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -592,7 +605,7 @@
     </div>
   </div>
 
-  <!-- 登記送外包單彈窗 (兩層分類連動) -->
+  <!-- 登記送外包單彈窗 -->
   <div id="dispatch-outsource-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-purple-800 w-full max-w-lg rounded-2xl p-5 space-y-3 text-xs sm:text-sm max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -674,7 +687,7 @@
           <div class="col-span-2">送貨地址：<span id="inv-form-address" class="text-white">--</span></div>
         </div>
 
-        <!-- 多品項動態列表 (含圖號自動建議清單) -->
+        <!-- 多品項動態列表 -->
         <datalist id="drawings-datalist"></datalist>
         <div class="border-t border-slate-800 pt-3 space-y-2">
           <div class="flex justify-between items-center">
@@ -825,7 +838,7 @@
   </div>
 
   <!-- ==============================================================
-       核心 JavaScript 邏輯 (PDF 支援、8格打單、兩層分類與自動帶入)
+       核心 JavaScript 邏輯
   ============================================================== -->
   <script>
     let orders = [];
@@ -838,13 +851,11 @@
     let pendingAuthTargetView = null;
     let fetchTimer = null;
 
-    // 零件價格與交期主檔庫 (雙軌自動記憶)
     let priceDatabase = JSON.parse(localStorage.getItem('zh_cnc_price_db_v24')) || [
       { client: "均豪精密工業股份有限公司", item: "6T291A1505", price: 180, lastDeliveryDate: "2026-10-25", notes: "定位閥座/AL6061硬陽" },
       { client: "均豪精密工業股份有限公司", item: "ZH-FIX-002", price: 350, lastDeliveryDate: "2026-10-20", notes: "S45C研磨治具" }
     ];
 
-    // 四大主分類與自建細項工種庫
     let outsourceCategories = JSON.parse(localStorage.getItem('zh_cnc_outsource_cats_v24')) || {
       "表面處理": ["本色陽極", "硬質陽極 (硬陽)", "黑色陽極", "化學鎳 (無電解鎳)", "染黑處置", "電解拋光"],
       "熱處理": ["真空淬火", "調質處置", "高週波硬化", "滲碳熱處理", "回火退火"],
@@ -891,7 +902,6 @@
       setTimeout(function() { t.classList.add('hidden'); }, 3500);
     }
 
-    // 將 Google 雲端網址格式化為可在 iframe 順暢內嵌預覽的 /preview 格式
     function formatDrivePreviewUrl(url) {
       if (!url) return '';
       let formatted = url.trim();
@@ -908,7 +918,6 @@
       return formatted;
     }
 
-    // 自動防抖抓取雲端圖庫檔案
     function debounceFetchDrawing(val) {
       clearTimeout(fetchTimer);
       fetchTimer = setTimeout(function() {
@@ -945,7 +954,6 @@
         }
       } catch (err) {}
 
-      // 前台直連模式：若為 ABC 測試圖紙，自動關聯預覽連結
       if (partNo.toUpperCase().indexOf('ABC') !== -1) {
         const fallbackUrl = 'https://drive.google.com/file/d/12Eb6n6dEQWDcimr8xWlXd5OijvYIXZrh/preview';
         if (urlInput) urlInput.value = fallbackUrl;
@@ -1063,8 +1071,6 @@
       populateSubtagSelector('outsource-subtag', '表面處理');
       filterOutsourceVendorsBySubtag('表面處理', document.getElementById('outsource-subtag').value);
       fetchCloudData();
-
-      // 手機開啟直接進入現場終端 (免密碼)
       executeSwitchView('shopfloor');
     });
 
@@ -1118,9 +1124,6 @@
       }
     }
 
-    // ==============================================================
-    // ★ 零件價格與交期資料庫 (自動感應帶入與背景記憶) ★
-    // ==============================================================
     function updateDrawingsDatalist(clientName) {
       const dl = document.getElementById('drawings-datalist');
       if (!dl) return;
@@ -1233,9 +1236,6 @@
       }
     }
 
-    // ==============================================================
-    // ★ 協力外包廠：四大主分類 + 自建細項工種連動 ★
-    // ==============================================================
     function populateSubtagSelector(selectId, mainCat) {
       const s = document.getElementById(selectId);
       if (!s) return;
@@ -1328,9 +1328,6 @@
       }
     }
 
-    // ==============================================================
-    // ★ 銷貨單：8格明細、客戶欄加大、備註微縮與自動分頁 ★
-    // ==============================================================
     function refreshSalesDatalist() {
       const dl = document.getElementById('sales-list');
       if (!dl) return;
@@ -1459,7 +1456,9 @@
       document.getElementById('inv-calc-total').innerText = grandTotal.toLocaleString();
     }
 
-    // ★ 列印核心：8 格固定高度 (6.2mm)、字體放大加粗、客戶框加大、備註往下延伸 ★
+    // ==============================================================
+    // ★ 關鍵列印核心：8 格超大高度 (8.5mm)、點陣實字純黑無鋸齒、大幅下移、注意事項加深 ★
+    // ==============================================================
     function handlePrintInvoice(e) {
       e.preventDefault();
       const invoiceNo = document.getElementById('inv-form-no').value.trim();
@@ -1516,94 +1515,96 @@
         const pageItems = items.slice(pIndex * pageSize, (pIndex + 1) * pageSize);
         const isLastPage = (pIndex === totalPages - 1);
 
+        // ★ 表格行高拉大至 8.5mm，加強清晰實體字 ★
         let tableRowsHtml = '';
         pageItems.forEach(function(item) {
           tableRowsHtml += 
-            '<tr style="height: 6.2mm;">' +
-              '<td class="font-bold text-xs">' + item.name + '</td>' +
-              '<td class="text-center font-mono font-bold text-xs">' + item.qty + '</td>' +
-              '<td class="text-right font-mono text-xs">' + item.price.toLocaleString() + '</td>' +
-              '<td class="text-right font-mono font-bold text-xs">' + item.amount.toLocaleString() + '</td>' +
+            '<tr style="height: 8.5mm;">' +
+              '<td style="font-weight: 800; font-size: 13.5px; color: #000000;">' + item.name + '</td>' +
+              '<td style="text-align: center; font-weight: 800; font-size: 14px; color: #000000;">' + item.qty + '</td>' +
+              '<td style="text-align: right; font-weight: 700; font-size: 13.5px; color: #000000;">' + item.price.toLocaleString() + '</td>' +
+              '<td style="text-align: right; font-weight: 900; font-size: 14px; color: #000000;">' + item.amount.toLocaleString() + '</td>' +
             '</tr>';
         });
 
+        // 補滿 8 格空行，維持 8.5mm 高度
         const emptyRows = pageSize - pageItems.length;
         for (let er = 0; er < emptyRows; er++) {
           tableRowsHtml += 
-            '<tr style="height: 6.2mm;">' +
+            '<tr style="height: 8.5mm;">' +
               '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
             '</tr>';
         }
 
         const pageDiv = document.createElement('div');
-        pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
+        pageDiv.className = 'printable-invoice-page select-none';
         pageDiv.innerHTML = 
-          '<!-- 頂部資訊 (含 LOGO 打印) -->' +
-          '<div class="flex justify-between items-start border-b-2 border-black pb-1 mb-1.5">' +
-            '<div class="flex items-center gap-2">' +
-              '<div class="w-11 h-11 shrink-0">' + LOGO_SVG_HTML + '</div>' +
+          '<!-- 頂部資訊 (字體加黑實打，避免缺筆劃) -->' +
+          '<div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000000; padding-bottom: 2mm; margin-bottom: 2mm;">' +
+            '<div style="display: flex; align-items: center; gap: 8px;">' +
+              '<div style="width: 44px; height: 44px; flex-shrink: 0;">' + LOGO_SVG_HTML + '</div>' +
               '<div>' +
-                '<h1 class="text-xl font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
-                '<p class="text-[11px] font-bold leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
-                '<p class="text-[11px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
+                '<h1 style="font-size: 20px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; color: #000000; margin: 0;">誌宏機械有限公司</h1>' +
+                '<p style="font-size: 12px; font-weight: 700; line-height: 1.2; margin: 2px 0 0 0; color: #000000;">桃園市桃園區大仁路50巷51弄9號</p>' +
+                '<p style="font-size: 12px; font-weight: 700; line-height: 1.2; margin: 2px 0 0 0; color: #000000;">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
               '</div>' +
             '</div>' +
-            '<div class="text-center pt-0.5">' +
-              '<h2 class="text-3xl font-black tracking-widest border-b-2 border-black pb-0.5 px-4">銷 貨 單</h2>' +
-              '<div class="text-[11px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
+            '<div style="text-align: center; padding-top: 2px;">' +
+              '<h2 style="font-size: 28px; font-weight: 900; letter-spacing: 6px; border-bottom: 2.5px solid #000000; padding-bottom: 2px; padding-left: 12px; padding-right: 12px; margin: 0; color: #000000;">銷 貨 單</h2>' +
+              '<div style="font-size: 12px; font-weight: 800; margin-top: 2px; color: #000000;">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
             '</div>' +
-            '<div class="text-right text-[11px] leading-snug space-y-0.5 font-medium">' +
-              '<div>業務人員：<span class="font-bold text-xs">' + salesName + '</span></div>' +
-              '<div>課稅別：<span class="font-bold">應稅</span></div>' +
-              '<div>銷貨單號：<span class="font-mono font-bold text-xs">' + invoiceNo + '</span></div>' +
-              '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
-            '</div>' +
-          '</div>' +
-
-          '<!-- 客戶資訊 (加大加寬，解除壓縮感) -->' +
-          '<div class="grid grid-cols-2 text-xs leading-normal border-2 border-black p-2.5 mb-2 bg-white">' +
-            '<div class="space-y-1">' +
-              '<div class="text-sm">客戶名稱：<strong class="font-black text-sm tracking-wide">' + clientName + '</strong></div>' +
-              '<div>統一編號：<span class="font-mono font-bold text-xs">' + (c.taxId || '') + '</span></div>' +
-              '<div>送貨地址：<span class="font-medium">' + (c.address || '') + '</span></div>' +
-            '</div>' +
-            '<div class="pl-3 space-y-1">' +
-              '<div>聯 絡 人：<span class="font-bold">' + (c.contact || '') + '</span></div>' +
-              '<div>聯絡電話：<span class="font-mono font-bold">' + (c.phone || '') + '</span></div>' +
-              '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
+            '<div style="text-align: right; font-size: 12.5px; font-weight: 700; line-height: 1.35; color: #000000;">' +
+              '<div>業務人員：<span style="font-weight: 900;">' + salesName + '</span></div>' +
+              '<div>課稅別：<span style="font-weight: 900;">應稅</span></div>' +
+              '<div>銷貨單號：<span style="font-weight: 900; letter-spacing: 0.5px;">' + invoiceNo + '</span></div>' +
+              '<div>銷貨日期：<span style="font-weight: 900;">' + formattedDate + '</span></div>' +
             '</div>' +
           '</div>' +
 
-          '<!-- 8 格品名規格表格 (每列調高至 6.2mm，字體放大至 11.5px) -->' +
-          '<table class="invoice-table text-[11.5px] mb-2 font-medium">' +
+          '<!-- 客戶資訊 (大幅加高加寬，徹底舒展) -->' +
+          '<div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 13px; line-height: 1.45; border: 1.8px solid #000000; padding: 6px 8px; margin-bottom: 3mm; background: #ffffff; color: #000000;">' +
+            '<div>' +
+              '<div style="font-size: 14.5px;">客戶名稱：<strong style="font-weight: 900; font-size: 15px; letter-spacing: 0.5px;">' + clientName + '</strong></div>' +
+              '<div>統一編號：<span style="font-weight: 800; font-size: 13.5px;">' + (c.taxId || '') + '</span></div>' +
+              '<div>送貨地址：<span style="font-weight: 700;">' + (c.address || '') + '</span></div>' +
+            '</div>' +
+            '<div style="padding-left: 12px;">' +
+              '<div>聯 絡 人：<span style="font-weight: 800;">' + (c.contact || '') + '</span></div>' +
+              '<div>聯絡電話：<span style="font-weight: 800;">' + (c.phone || '') + '</span></div>' +
+              '<div>傳真號碼：<span style="font-weight: 800;">' + (c.fax || '') + '</span></div>' +
+            '</div>' +
+          '</div>' +
+
+          '<!-- 8 格品名規格表格 (高度大幅加大至 8.5mm) -->' +
+          '<table class="invoice-table" style="margin-bottom: 3.5mm;">' +
             '<thead>' +
-              '<tr class="bg-gray-100 text-center font-black text-xs">' +
-                '<th style="width: 46%; padding: 3px 4px;">品名規格 / 圖號</th>' +
-                '<th style="width: 12%; padding: 3px 4px;">數量</th>' +
-                '<th style="width: 18%; padding: 3px 4px;">單價</th>' +
-                '<th style="width: 24%; padding: 3px 4px;">金額</th>' +
+              '<tr style="background: #f1f5f9; text-align: center; font-weight: 900; font-size: 13.5px; height: 7mm;">' +
+                '<th style="width: 48%; padding: 4px;">品名規格 / 圖號</th>' +
+                '<th style="width: 12%; padding: 4px;">數量</th>' +
+                '<th style="width: 18%; padding: 4px;">單價</th>' +
+                '<th style="width: 22%; padding: 4px;">金額</th>' +
               '</tr>' +
             '</thead>' +
             '<tbody>' + tableRowsHtml + '</tbody>' +
           '</table>' +
 
-          '<!-- 總計小計欄 (字體加大，往下舒展) -->' +
-          '<div class="border-2 border-black px-3 py-1.5 text-xs font-mono flex justify-between items-center mb-2">' +
-            '<div>數量總計：<strong class="text-sm font-black">' + (isLastPage ? totalQty : '(續下頁)') + '</strong> PCS</div>' +
-            '<div>合 &nbsp; 計：<span class="text-xs font-bold">' + (isLastPage ? subtotal.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>稅 &nbsp; 額：<span class="text-xs font-bold">' + (isLastPage ? tax.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>總 &nbsp; 計：<strong class="text-base font-black text-black">' + (isLastPage ? grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
+          '<!-- 總計小計欄 (大幅往下移，間距拉開，黑體加粗加強) -->' +
+          '<div style="border: 1.8px solid #000000; padding: 4px 10px; font-size: 13.5px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-bottom: 3.5mm; color: #000000; background: #ffffff;">' +
+            '<div>數量總計：<strong style="font-size: 15px; font-weight: 900;">' + (isLastPage ? totalQty : '(續下頁)') + '</strong> PCS</div>' +
+            '<div>合 &nbsp; 計：<span style="font-weight: 800;">' + (isLastPage ? subtotal.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>稅 &nbsp; 額：<span style="font-weight: 800;">' + (isLastPage ? tax.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>總 &nbsp; 計：<strong style="font-size: 17px; font-weight: 900; text-decoration: underline;">' + (isLastPage ? grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
           '</div>' +
 
-          '<!-- 備註與客戶大簽章格 (往下微調，高度設為 18mm，加大簽章區) -->' +
-          '<div class="grid grid-cols-12 border-2 border-black" style="height: 18mm;">' +
-            '<div class="col-span-7 p-2 border-r-2 border-black flex flex-col justify-between text-xs">' +
-              '<div><strong>備註：</strong><span class="font-medium text-xs">' + notes + '</span></div>' +
-              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+          '<!-- 備註與客戶大簽章格 (高度 20mm，注意事項改純黑粗體防模糊) -->' +
+          '<div style="display: grid; grid-template-columns: 7fr 5fr; border: 1.8px solid #000000; height: 20mm; color: #000000; background: #ffffff;">' +
+            '<div style="padding: 6px; border-right: 1.8px solid #000000; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px;">' +
+              '<div><strong style="font-weight: 900;">備註：</strong><span style="font-weight: 700;">' + notes + '</span></div>' +
+              '<div style="font-size: 11px; font-weight: 800; color: #000000; letter-spacing: 0.2px;">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
             '</div>' +
-            '<div class="col-span-5 p-2 flex flex-col justify-between text-xs">' +
-              '<div class="font-black text-xs">客戶簽章：</div>' +
-              '<div class="text-center text-[10px] text-gray-400 font-bold">( 請在此處簽名或蓋發票章 )</div>' +
+            '<div style="padding: 6px; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px;">' +
+              '<div style="font-weight: 900; font-size: 13.5px;">客戶簽章：</div>' +
+              '<div style="text-align: center; font-size: 11.5px; font-weight: 800; color: #000000;">( 請在此處簽名或蓋發票章 )</div>' +
             '</div>' +
           '</div>';
         printContainer.appendChild(pageDiv);
@@ -1667,91 +1668,82 @@
         let tableRowsHtml = '';
         pageItems.forEach(function(item) {
           tableRowsHtml += 
-            '<tr style="height: 6.2mm;">' +
-              '<td class="font-bold text-xs">' + item.name + '</td>' +
-              '<td class="text-center font-mono font-bold text-xs">' + item.qty + '</td>' +
-              '<td class="text-right font-mono text-xs">' + item.price.toLocaleString() + '</td>' +
-              '<td class="text-right font-mono font-bold text-xs">' + item.amount.toLocaleString() + '</td>' +
+            '<tr style="height: 8.5mm;">' +
+              '<td style="font-weight: 800; font-size: 13.5px; color: #000000;">' + item.name + '</td>' +
+              '<td style="text-align: center; font-weight: 800; font-size: 14px; color: #000000;">' + item.qty + '</td>' +
+              '<td style="text-align: right; font-weight: 700; font-size: 13.5px; color: #000000;">' + item.price.toLocaleString() + '</td>' +
+              '<td style="text-align: right; font-weight: 900; font-size: 14px; color: #000000;">' + item.amount.toLocaleString() + '</td>' +
             '</tr>';
         });
 
         const emptyRows = pageSize - pageItems.length;
         for (let er = 0; er < emptyRows; er++) {
           tableRowsHtml += 
-            '<tr style="height: 6.2mm;">' +
+            '<tr style="height: 8.5mm;">' +
               '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
             '</tr>';
         }
 
         const pageDiv = document.createElement('div');
-        pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
+        pageDiv.className = 'printable-invoice-page select-none';
         pageDiv.innerHTML = 
-          '<!-- 頂部資訊 (含 LOGO 打印) -->' +
-          '<div class="flex justify-between items-start border-b-2 border-black pb-1 mb-1.5">' +
-            '<div class="flex items-center gap-2">' +
-              '<div class="w-11 h-11 shrink-0">' + LOGO_SVG_HTML + '</div>' +
+          '<div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000000; padding-bottom: 2mm; margin-bottom: 2mm;">' +
+            '<div style="display: flex; align-items: center; gap: 8px;">' +
+              '<div style="width: 44px; height: 44px; flex-shrink: 0;">' + LOGO_SVG_HTML + '</div>' +
               '<div>' +
-                '<h1 class="text-xl font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
-                '<p class="text-[11px] font-bold leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
-                '<p class="text-[11px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
+                '<h1 style="font-size: 20px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; color: #000000; margin: 0;">誌宏機械有限公司</h1>' +
+                '<p style="font-size: 12px; font-weight: 700; line-height: 1.2; margin: 2px 0 0 0; color: #000000;">桃園市桃園區大仁路50巷51弄9號</p>' +
+                '<p style="font-size: 12px; font-weight: 700; line-height: 1.2; margin: 2px 0 0 0; color: #000000;">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
               '</div>' +
             '</div>' +
-            '<div class="text-center pt-0.5">' +
-              '<h2 class="text-3xl font-black tracking-widest border-b-2 border-black pb-0.5 px-4">銷 貨 單</h2>' +
-              '<div class="text-[11px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
+            '<div style="text-align: center; padding-top: 2px;">' +
+              '<h2 style="font-size: 28px; font-weight: 900; letter-spacing: 6px; border-bottom: 2.5px solid #000000; padding-bottom: 2px; padding-left: 12px; padding-right: 12px; margin: 0; color: #000000;">銷 貨 單</h2>' +
+              '<div style="font-size: 12px; font-weight: 800; margin-top: 2px; color: #000000;">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
             '</div>' +
-            '<div class="text-right text-[11px] leading-snug space-y-0.5 font-medium">' +
-              '<div>業務人員：<span class="font-bold text-xs">' + (inv.salesName || '徐佩萱') + '</span></div>' +
-              '<div>課稅別：<span class="font-bold">應稅</span></div>' +
-              '<div>銷貨單號：<span class="font-mono font-bold text-xs">' + inv.invoiceNo + '</span></div>' +
-              '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
-            '</div>' +
-          '</div>' +
-
-          '<!-- 客戶資訊 (加大加寬，解除壓縮感) -->' +
-          '<div class="grid grid-cols-2 text-xs leading-normal border-2 border-black p-2.5 mb-2 bg-white">' +
-            '<div class="space-y-1">' +
-              '<div class="text-sm">客戶名稱：<strong class="font-black text-sm tracking-wide">' + inv.clientName + '</strong></div>' +
-              '<div>統一編號：<span class="font-mono font-bold text-xs">' + (c.taxId || '') + '</span></div>' +
-              '<div>送貨地址：<span class="font-medium">' + (c.address || '') + '</span></div>' +
-            '</div>' +
-            '<div class="pl-3 space-y-1">' +
-              '<div>聯 絡 人：<span class="font-bold">' + (c.contact || '') + '</span></div>' +
-              '<div>聯絡電話：<span class="font-mono font-bold">' + (c.phone || '') + '</span></div>' +
-              '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
+            '<div style="text-align: right; font-size: 12.5px; font-weight: 700; line-height: 1.35; color: #000000;">' +
+              '<div>業務人員：<span style="font-weight: 900;">' + (inv.salesName || '徐佩萱') + '</span></div>' +
+              '<div>課稅別：<span style="font-weight: 900;">應稅</span></div>' +
+              '<div>銷貨單號：<span style="font-weight: 900; letter-spacing: 0.5px;">' + inv.invoiceNo + '</span></div>' +
+              '<div>銷貨日期：<span style="font-weight: 900;">' + formattedDate + '</span></div>' +
             '</div>' +
           '</div>' +
-
-          '<!-- 8 格品名規格表格 (每列調高至 6.2mm，字體放大至 11.5px) -->' +
-          '<table class="invoice-table text-[11.5px] mb-2 font-medium">' +
+          '<div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 13px; line-height: 1.45; border: 1.8px solid #000000; padding: 6px 8px; margin-bottom: 3mm; background: #ffffff; color: #000000;">' +
+            '<div>' +
+              '<div style="font-size: 14.5px;">客戶名稱：<strong style="font-weight: 900; font-size: 15px; letter-spacing: 0.5px;">' + inv.clientName + '</strong></div>' +
+              '<div>統一編號：<span style="font-weight: 800; font-size: 13.5px;">' + (c.taxId || '') + '</span></div>' +
+              '<div>送貨地址：<span style="font-weight: 700;">' + (c.address || '') + '</span></div>' +
+            '</div>' +
+            '<div style="padding-left: 12px;">' +
+              '<div>聯 絡 人：<span style="font-weight: 800;">' + (c.contact || '') + '</span></div>' +
+              '<div>聯絡電話：<span style="font-weight: 800;">' + (c.phone || '') + '</span></div>' +
+              '<div>傳真號碼：<span style="font-weight: 800;">' + (c.fax || '') + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<table class="invoice-table" style="margin-bottom: 3.5mm;">' +
             '<thead>' +
-              '<tr class="bg-gray-100 text-center font-black text-xs">' +
-                '<th style="width: 46%; padding: 3px 4px;">品名規格 / 圖號</th>' +
-                '<th style="width: 12%; padding: 3px 4px;">數量</th>' +
-                '<th style="width: 18%; padding: 3px 4px;">單價</th>' +
-                '<th style="width: 24%; padding: 3px 4px;">金額</th>' +
+              '<tr style="background: #f1f5f9; text-align: center; font-weight: 900; font-size: 13.5px; height: 7mm;">' +
+                '<th style="width: 48%; padding: 4px;">品名規格 / 圖號</th>' +
+                '<th style="width: 12%; padding: 4px;">數量</th>' +
+                '<th style="width: 18%; padding: 4px;">單價</th>' +
+                '<th style="width: 22%; padding: 4px;">金額</th>' +
               '</tr>' +
             '</thead>' +
             '<tbody>' + tableRowsHtml + '</tbody>' +
           '</table>' +
-
-          '<!-- 總計小計欄 (字體加大，往下舒展) -->' +
-          '<div class="border-2 border-black px-3 py-1.5 text-xs font-mono flex justify-between items-center mb-2">' +
-            '<div>數量總計：<strong class="text-sm font-black">' + (isLastPage ? (inv.totalQty || inv.qty) : '(續下頁)') + '</strong> PCS</div>' +
-            '<div>合 &nbsp; 計：<span class="text-xs font-bold">' + (isLastPage ? inv.subtotal.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>稅 &nbsp; 額：<span class="text-xs font-bold">' + (isLastPage ? inv.tax.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>總 &nbsp; 計：<strong class="text-base font-black text-black">' + (isLastPage ? inv.grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
+          '<div style="border: 1.8px solid #000000; padding: 4px 10px; font-size: 13.5px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-bottom: 3.5mm; color: #000000; background: #ffffff;">' +
+            '<div>數量總計：<strong style="font-size: 15px; font-weight: 900;">' + (isLastPage ? (inv.totalQty || inv.qty) : '(續下頁)') + '</strong> PCS</div>' +
+            '<div>合 &nbsp; 計：<span style="font-weight: 800;">' + (isLastPage ? inv.subtotal.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>稅 &nbsp; 額：<span style="font-weight: 800;">' + (isLastPage ? inv.tax.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>總 &nbsp; 計：<strong style="font-size: 17px; font-weight: 900; text-decoration: underline;">' + (isLastPage ? inv.grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
           '</div>' +
-
-          '<!-- 備註與客戶大簽章格 (往下微調，高度設為 18mm，加大簽章區) -->' +
-          '<div class="grid grid-cols-12 border-2 border-black" style="height: 18mm;">' +
-            '<div class="col-span-7 p-2 border-r-2 border-black flex flex-col justify-between text-xs">' +
-              '<div><strong>備註：</strong><span class="font-medium text-xs">' + (inv.notes || '') + '</span></div>' +
-              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+          '<div style="display: grid; grid-template-columns: 7fr 5fr; border: 1.8px solid #000000; height: 20mm; color: #000000; background: #ffffff;">' +
+            '<div style="padding: 6px; border-right: 1.8px solid #000000; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px;">' +
+              '<div><strong style="font-weight: 900;">備註：</strong><span style="font-weight: 700;">' + (inv.notes || '') + '</span></div>' +
+              '<div style="font-size: 11px; font-weight: 800; color: #000000; letter-spacing: 0.2px;">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
             '</div>' +
-            '<div class="col-span-5 p-2 flex flex-col justify-between text-xs">' +
-              '<div class="font-black text-xs">客戶簽章：</div>' +
-              '<div class="text-center text-[10px] text-gray-400 font-bold">( 請在此處簽名或蓋發票章 )</div>' +
+            '<div style="padding: 6px; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px;">' +
+              '<div style="font-weight: 900; font-size: 13.5px;">客戶簽章：</div>' +
+              '<div style="text-align: center; font-size: 11.5px; font-weight: 800; color: #000000;">( 請在此處簽名或蓋發票章 )</div>' +
             '</div>' +
           '</div>';
         printContainer.appendChild(pageDiv);
@@ -1761,7 +1753,7 @@
     }
 
     // ==============================================================
-    // ★ 現場師傅端 (含 2D PDF / 雲端圖面即時預覽與縮放) ★
+    // ★ 現場師傅端
     // ==============================================================
     function renderShopfloorView() {
       const c = document.getElementById('shopfloor-content');
@@ -1774,7 +1766,6 @@
       const o = orders.find(function(x) { return String(x.id).trim() === String(currentWorkerOrderId).trim(); });
       if (!o) return;
 
-      // 檢查是否綁定 Google Drive PDF 或圖片連結
       let drawingViewerHtml = '';
       if (o.drawingUrl) {
         const driveEmbedUrl = formatDrivePreviewUrl(o.drawingUrl);
@@ -1855,9 +1846,6 @@
       openModal('completion-modal');
     }
 
-    // ==============================================================
-    // ★ 權限隔離切換邏輯 ★
-    // ==============================================================
     function switchView(view) {
       const protectedViews = ['office', 'invoices', 'prices', 'clients'];
       if (protectedViews.indexOf(view) !== -1 && !isOfficeUnlocked()) {
@@ -1944,9 +1932,6 @@
       });
     }
 
-    // ==============================================================
-    // ★ 工單與外包發放業務邏輯 ★
-    // ==============================================================
     async function handleCreateOrder(e) {
       e.preventDefault();
       const orderNo = String(document.getElementById('form-order-no').value).trim();
