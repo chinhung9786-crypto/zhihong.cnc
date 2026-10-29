@@ -64,7 +64,7 @@
         width: 195mm !important;
         height: 128mm !important;
         margin-left: 4mm !important;
-        margin-top: 6.5mm !important; /* 版面微調下移，避開撕紙線 */
+        margin-top: 6.5mm !important;
         padding: 0 !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
@@ -76,8 +76,8 @@
         break-after: auto !important;
       }
     }
-    .invoice-table { border-collapse: collapse; width: 100%; border: 1.2px solid #000; }
-    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 1.5px 4px; }
+    .invoice-table { border-collapse: collapse; width: 100%; border: 1.5px solid #000; }
+    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 2px 4px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
@@ -1459,7 +1459,7 @@
       document.getElementById('inv-calc-total').innerText = grandTotal.toLocaleString();
     }
 
-    // ★ 列印核心：8 格固定高度、版面下移、客戶框加大、備註微縮 ★
+    // ★ 列印核心：8 格固定高度 (6.2mm)、字體放大加粗、客戶框加大、備註往下延伸 ★
     function handlePrintInvoice(e) {
       e.preventDefault();
       const invoiceNo = document.getElementById('inv-form-no').value.trim();
@@ -1507,7 +1507,6 @@
       const dParts = invoiceDate.split('-');
       const formattedDate = dParts[0] + ' 年 ' + dParts[1] + ' 月 ' + dParts[2] + ' 日';
 
-      // ★ 8 格分頁演算法 ★
       const pageSize = 8;
       const totalPages = Math.ceil(items.length / pageSize);
       const printContainer = document.getElementById('printable-invoice-container');
@@ -1520,19 +1519,18 @@
         let tableRowsHtml = '';
         pageItems.forEach(function(item) {
           tableRowsHtml += 
-            '<tr style="height: 5.6mm;">' +
-              '<td class="font-bold">' + item.name + '</td>' +
-              '<td class="text-center font-mono font-bold">' + item.qty + '</td>' +
-              '<td class="text-right font-mono">' + item.price.toLocaleString() + '</td>' +
-              '<td class="text-right font-mono font-bold">' + item.amount.toLocaleString() + '</td>' +
+            '<tr style="height: 6.2mm;">' +
+              '<td class="font-bold text-xs">' + item.name + '</td>' +
+              '<td class="text-center font-mono font-bold text-xs">' + item.qty + '</td>' +
+              '<td class="text-right font-mono text-xs">' + item.price.toLocaleString() + '</td>' +
+              '<td class="text-right font-mono font-bold text-xs">' + item.amount.toLocaleString() + '</td>' +
             '</tr>';
         });
 
-        // 補滿 8 格高度
         const emptyRows = pageSize - pageItems.length;
         for (let er = 0; er < emptyRows; er++) {
           tableRowsHtml += 
-            '<tr style="height: 5.6mm;">' +
+            '<tr style="height: 6.2mm;">' +
               '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
             '</tr>';
         }
@@ -1541,71 +1539,71 @@
         pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
         pageDiv.innerHTML = 
           '<!-- 頂部資訊 (含 LOGO 打印) -->' +
-          '<div class="flex justify-between items-start border-b border-black pb-1 mb-1">' +
+          '<div class="flex justify-between items-start border-b-2 border-black pb-1 mb-1.5">' +
             '<div class="flex items-center gap-2">' +
-              '<div class="w-10 h-10 shrink-0">' + LOGO_SVG_HTML + '</div>' +
+              '<div class="w-11 h-11 shrink-0">' + LOGO_SVG_HTML + '</div>' +
               '<div>' +
-                '<h1 class="text-lg font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
-                '<p class="text-[10px] leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
-                '<p class="text-[10px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
+                '<h1 class="text-xl font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
+                '<p class="text-[11px] font-bold leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
+                '<p class="text-[11px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
               '</div>' +
             '</div>' +
             '<div class="text-center pt-0.5">' +
-              '<h2 class="text-2xl font-black tracking-widest border-b-2 border-black pb-0.5 px-3">銷 貨 單</h2>' +
-              '<div class="text-[10px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
+              '<h2 class="text-3xl font-black tracking-widest border-b-2 border-black pb-0.5 px-4">銷 貨 單</h2>' +
+              '<div class="text-[11px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
             '</div>' +
-            '<div class="text-right text-[10px] leading-tight space-y-0.5">' +
-              '<div>業務人員：<span class="font-bold">' + salesName + '</span></div>' +
+            '<div class="text-right text-[11px] leading-snug space-y-0.5 font-medium">' +
+              '<div>業務人員：<span class="font-bold text-xs">' + salesName + '</span></div>' +
               '<div>課稅別：<span class="font-bold">應稅</span></div>' +
-              '<div>銷貨單號：<span class="font-mono font-bold">' + invoiceNo + '</span></div>' +
+              '<div>銷貨單號：<span class="font-mono font-bold text-xs">' + invoiceNo + '</span></div>' +
               '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
             '</div>' +
           '</div>' +
 
-          '<!-- 客戶資訊 (微調加大，更加舒展) -->' +
-          '<div class="grid grid-cols-2 text-[11px] leading-tight border border-black p-2 mb-1 bg-white">' +
-            '<div class="space-y-0.5">' +
-              '<div>客戶名稱：<strong class="text-xs">' + clientName + '</strong></div>' +
-              '<div>統一編號：<span class="font-mono">' + (c.taxId || '') + '</span></div>' +
-              '<div>送貨地址：<span>' + (c.address || '') + '</span></div>' +
+          '<!-- 客戶資訊 (加大加寬，解除壓縮感) -->' +
+          '<div class="grid grid-cols-2 text-xs leading-normal border-2 border-black p-2.5 mb-2 bg-white">' +
+            '<div class="space-y-1">' +
+              '<div class="text-sm">客戶名稱：<strong class="font-black text-sm tracking-wide">' + clientName + '</strong></div>' +
+              '<div>統一編號：<span class="font-mono font-bold text-xs">' + (c.taxId || '') + '</span></div>' +
+              '<div>送貨地址：<span class="font-medium">' + (c.address || '') + '</span></div>' +
             '</div>' +
-            '<div class="pl-2 space-y-0.5">' +
-              '<div>聯 絡 人：<span>' + (c.contact || '') + '</span></div>' +
-              '<div>聯絡電話：<span class="font-mono">' + (c.phone || '') + '</span></div>' +
+            '<div class="pl-3 space-y-1">' +
+              '<div>聯 絡 人：<span class="font-bold">' + (c.contact || '') + '</span></div>' +
+              '<div>聯絡電話：<span class="font-mono font-bold">' + (c.phone || '') + '</span></div>' +
               '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
             '</div>' +
           '</div>' +
 
-          '<!-- 8 格品名規格表格 -->' +
-          '<table class="invoice-table text-[10px] mb-1">' +
+          '<!-- 8 格品名規格表格 (每列調高至 6.2mm，字體放大至 11.5px) -->' +
+          '<table class="invoice-table text-[11.5px] mb-2 font-medium">' +
             '<thead>' +
-              '<tr class="bg-gray-100 text-center font-bold">' +
-                '<th style="width: 45%;">品名規格 / 圖號</th>' +
-                '<th style="width: 13%;">數量</th>' +
-                '<th style="width: 17%;">單價</th>' +
-                '<th style="width: 25%;">金額</th>' +
+              '<tr class="bg-gray-100 text-center font-black text-xs">' +
+                '<th style="width: 46%; padding: 3px 4px;">品名規格 / 圖號</th>' +
+                '<th style="width: 12%; padding: 3px 4px;">數量</th>' +
+                '<th style="width: 18%; padding: 3px 4px;">單價</th>' +
+                '<th style="width: 24%; padding: 3px 4px;">金額</th>' +
               '</tr>' +
             '</thead>' +
             '<tbody>' + tableRowsHtml + '</tbody>' +
           '</table>' +
 
-          '<!-- 總計小計欄 -->' +
-          '<div class="border border-black px-2 py-1 text-[10.5px] font-mono flex justify-between items-center mb-1">' +
-            '<div>數量總計：<strong class="text-xs">' + (isLastPage ? totalQty : '(續下頁)') + '</strong> PCS</div>' +
-            '<div>合 &nbsp; 計：<span>' + (isLastPage ? subtotal.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>稅 &nbsp; 額：<span>' + (isLastPage ? tax.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>總 &nbsp; 計：<strong class="text-sm font-bold">' + (isLastPage ? grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
+          '<!-- 總計小計欄 (字體加大，往下舒展) -->' +
+          '<div class="border-2 border-black px-3 py-1.5 text-xs font-mono flex justify-between items-center mb-2">' +
+            '<div>數量總計：<strong class="text-sm font-black">' + (isLastPage ? totalQty : '(續下頁)') + '</strong> PCS</div>' +
+            '<div>合 &nbsp; 計：<span class="text-xs font-bold">' + (isLastPage ? subtotal.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>稅 &nbsp; 額：<span class="text-xs font-bold">' + (isLastPage ? tax.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>總 &nbsp; 計：<strong class="text-base font-black text-black">' + (isLastPage ? grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
           '</div>' +
 
-          '<!-- 備註與客戶大簽章格 (高度微縮至 16mm) -->' +
-          '<div class="grid grid-cols-12 border border-black" style="height: 16mm;">' +
-            '<div class="col-span-7 p-1 border-r border-black flex flex-col justify-between text-[10px]">' +
-              '<div><strong>備註：</strong><span class="font-normal">' + notes + '</span></div>' +
-              '<div class="text-[8.5px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+          '<!-- 備註與客戶大簽章格 (往下微調，高度設為 18mm，加大簽章區) -->' +
+          '<div class="grid grid-cols-12 border-2 border-black" style="height: 18mm;">' +
+            '<div class="col-span-7 p-2 border-r-2 border-black flex flex-col justify-between text-xs">' +
+              '<div><strong>備註：</strong><span class="font-medium text-xs">' + notes + '</span></div>' +
+              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
             '</div>' +
-            '<div class="col-span-5 p-1 flex flex-col justify-between text-[10px]">' +
-              '<div class="font-bold">客戶簽章：</div>' +
-              '<div class="text-center text-[9px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
+            '<div class="col-span-5 p-2 flex flex-col justify-between text-xs">' +
+              '<div class="font-black text-xs">客戶簽章：</div>' +
+              '<div class="text-center text-[10px] text-gray-400 font-bold">( 請在此處簽名或蓋發票章 )</div>' +
             '</div>' +
           '</div>';
         printContainer.appendChild(pageDiv);
@@ -1669,18 +1667,18 @@
         let tableRowsHtml = '';
         pageItems.forEach(function(item) {
           tableRowsHtml += 
-            '<tr style="height: 5.6mm;">' +
-              '<td class="font-bold">' + item.name + '</td>' +
-              '<td class="text-center font-mono font-bold">' + item.qty + '</td>' +
-              '<td class="text-right font-mono">' + item.price.toLocaleString() + '</td>' +
-              '<td class="text-right font-mono font-bold">' + item.amount.toLocaleString() + '</td>' +
+            '<tr style="height: 6.2mm;">' +
+              '<td class="font-bold text-xs">' + item.name + '</td>' +
+              '<td class="text-center font-mono font-bold text-xs">' + item.qty + '</td>' +
+              '<td class="text-right font-mono text-xs">' + item.price.toLocaleString() + '</td>' +
+              '<td class="text-right font-mono font-bold text-xs">' + item.amount.toLocaleString() + '</td>' +
             '</tr>';
         });
 
         const emptyRows = pageSize - pageItems.length;
         for (let er = 0; er < emptyRows; er++) {
           tableRowsHtml += 
-            '<tr style="height: 5.6mm;">' +
+            '<tr style="height: 6.2mm;">' +
               '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
             '</tr>';
         }
@@ -1688,63 +1686,72 @@
         const pageDiv = document.createElement('div');
         pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
         pageDiv.innerHTML = 
-          '<div class="flex justify-between items-start border-b border-black pb-1 mb-1">' +
+          '<!-- 頂部資訊 (含 LOGO 打印) -->' +
+          '<div class="flex justify-between items-start border-b-2 border-black pb-1 mb-1.5">' +
             '<div class="flex items-center gap-2">' +
-              '<div class="w-10 h-10 shrink-0">' + LOGO_SVG_HTML + '</div>' +
+              '<div class="w-11 h-11 shrink-0">' + LOGO_SVG_HTML + '</div>' +
               '<div>' +
-                '<h1 class="text-lg font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
-                '<p class="text-[10px] leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
-                '<p class="text-[10px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
+                '<h1 class="text-xl font-black tracking-wider leading-tight">誌宏機械有限公司</h1>' +
+                '<p class="text-[11px] font-bold leading-tight mt-0.5">桃園市桃園區大仁路50巷51弄9號</p>' +
+                '<p class="text-[11px] font-mono leading-tight">TEL：03-3622245 &nbsp; FAX：03-3764320</p>' +
               '</div>' +
             '</div>' +
             '<div class="text-center pt-0.5">' +
-              '<h2 class="text-2xl font-black tracking-widest border-b-2 border-black pb-0.5 px-3">銷 貨 單</h2>' +
-              '<div class="text-[10px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
+              '<h2 class="text-3xl font-black tracking-widest border-b-2 border-black pb-0.5 px-4">銷 貨 單</h2>' +
+              '<div class="text-[11px] mt-0.5 font-mono font-bold">第 ' + (pIndex + 1) + ' 頁 / 共 ' + totalPages + ' 頁</div>' +
             '</div>' +
-            '<div class="text-right text-[10px] leading-tight space-y-0.5">' +
-              '<div>業務人員：<span class="font-bold">' + (inv.salesName || '徐佩萱') + '</span></div>' +
+            '<div class="text-right text-[11px] leading-snug space-y-0.5 font-medium">' +
+              '<div>業務人員：<span class="font-bold text-xs">' + (inv.salesName || '徐佩萱') + '</span></div>' +
               '<div>課稅別：<span class="font-bold">應稅</span></div>' +
-              '<div>銷貨單號：<span class="font-mono font-bold">' + inv.invoiceNo + '</span></div>' +
+              '<div>銷貨單號：<span class="font-mono font-bold text-xs">' + inv.invoiceNo + '</span></div>' +
               '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
             '</div>' +
           '</div>' +
-          '<div class="grid grid-cols-2 text-[11px] leading-tight border border-black p-2 mb-1 bg-white">' +
-            '<div class="space-y-0.5">' +
-              '<div>客戶名稱：<strong class="text-xs">' + inv.clientName + '</strong></div>' +
-              '<div>統一編號：<span class="font-mono">' + (c.taxId || '') + '</span></div>' +
-              '<div>送貨地址：<span>' + (c.address || '') + '</span></div>' +
+
+          '<!-- 客戶資訊 (加大加寬，解除壓縮感) -->' +
+          '<div class="grid grid-cols-2 text-xs leading-normal border-2 border-black p-2.5 mb-2 bg-white">' +
+            '<div class="space-y-1">' +
+              '<div class="text-sm">客戶名稱：<strong class="font-black text-sm tracking-wide">' + inv.clientName + '</strong></div>' +
+              '<div>統一編號：<span class="font-mono font-bold text-xs">' + (c.taxId || '') + '</span></div>' +
+              '<div>送貨地址：<span class="font-medium">' + (c.address || '') + '</span></div>' +
             '</div>' +
-            '<div class="pl-2 space-y-0.5">' +
-              '<div>聯 絡 人：<span>' + (c.contact || '') + '</span></div>' +
-              '<div>聯絡電話：<span class="font-mono">' + (c.phone || '') + '</span></div>' +
+            '<div class="pl-3 space-y-1">' +
+              '<div>聯 絡 人：<span class="font-bold">' + (c.contact || '') + '</span></div>' +
+              '<div>聯絡電話：<span class="font-mono font-bold">' + (c.phone || '') + '</span></div>' +
               '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
             '</div>' +
           '</div>' +
-          '<table class="invoice-table text-[10px] mb-1">' +
+
+          '<!-- 8 格品名規格表格 (每列調高至 6.2mm，字體放大至 11.5px) -->' +
+          '<table class="invoice-table text-[11.5px] mb-2 font-medium">' +
             '<thead>' +
-              '<tr class="bg-gray-100 text-center font-bold">' +
-                '<th style="width: 45%;">品名規格 / 圖號</th>' +
-                '<th style="width: 13%;">數量</th>' +
-                '<th style="width: 17%;">單價</th>' +
-                '<th style="width: 25%;">金額</th>' +
+              '<tr class="bg-gray-100 text-center font-black text-xs">' +
+                '<th style="width: 46%; padding: 3px 4px;">品名規格 / 圖號</th>' +
+                '<th style="width: 12%; padding: 3px 4px;">數量</th>' +
+                '<th style="width: 18%; padding: 3px 4px;">單價</th>' +
+                '<th style="width: 24%; padding: 3px 4px;">金額</th>' +
               '</tr>' +
             '</thead>' +
             '<tbody>' + tableRowsHtml + '</tbody>' +
           '</table>' +
-          '<div class="border border-black px-2 py-1 text-[10.5px] font-mono flex justify-between items-center mb-1">' +
-            '<div>數量總計：<strong class="text-xs">' + (isLastPage ? (inv.totalQty || inv.qty) : '(續下頁)') + '</strong> PCS</div>' +
-            '<div>合 &nbsp; 計：<span>' + (isLastPage ? inv.subtotal.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>稅 &nbsp; 額：<span>' + (isLastPage ? inv.tax.toLocaleString() : '--') + '</span> 元</div>' +
-            '<div>總 &nbsp; 計：<strong class="text-sm font-bold">' + (isLastPage ? inv.grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
+
+          '<!-- 總計小計欄 (字體加大，往下舒展) -->' +
+          '<div class="border-2 border-black px-3 py-1.5 text-xs font-mono flex justify-between items-center mb-2">' +
+            '<div>數量總計：<strong class="text-sm font-black">' + (isLastPage ? (inv.totalQty || inv.qty) : '(續下頁)') + '</strong> PCS</div>' +
+            '<div>合 &nbsp; 計：<span class="text-xs font-bold">' + (isLastPage ? inv.subtotal.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>稅 &nbsp; 額：<span class="text-xs font-bold">' + (isLastPage ? inv.tax.toLocaleString() : '--') + '</span> 元</div>' +
+            '<div>總 &nbsp; 計：<strong class="text-base font-black text-black">' + (isLastPage ? inv.grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
           '</div>' +
-          '<div class="grid grid-cols-12 border border-black" style="height: 16mm;">' +
-            '<div class="col-span-7 p-1 border-r border-black flex flex-col justify-between text-[10px]">' +
-              '<div><strong>備註：</strong><span class="font-normal">' + (inv.notes || '') + '</span></div>' +
-              '<div class="text-[8.5px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+
+          '<!-- 備註與客戶大簽章格 (往下微調，高度設為 18mm，加大簽章區) -->' +
+          '<div class="grid grid-cols-12 border-2 border-black" style="height: 18mm;">' +
+            '<div class="col-span-7 p-2 border-r-2 border-black flex flex-col justify-between text-xs">' +
+              '<div><strong>備註：</strong><span class="font-medium text-xs">' + (inv.notes || '') + '</span></div>' +
+              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
             '</div>' +
-            '<div class="col-span-5 p-1 flex flex-col justify-between text-[10px]">' +
-              '<div class="font-bold">客戶簽章：</div>' +
-              '<div class="text-center text-[9px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
+            '<div class="col-span-5 p-2 flex flex-col justify-between text-xs">' +
+              '<div class="font-black text-xs">客戶簽章：</div>' +
+              '<div class="text-center text-[10px] text-gray-400 font-bold">( 請在此處簽名或蓋發票章 )</div>' +
             '</div>' +
           '</div>';
         printContainer.appendChild(pageDiv);
