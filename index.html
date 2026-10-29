@@ -28,7 +28,9 @@
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-    /* 中一刀專用列印樣式 (寬度 195mm 避孔、每頁 8 格、強制斷頁) */
+    /* ==============================================================
+       ★ 中一刀專用列印樣式 (寬度 195mm 避孔、每頁 8 格、強制斷頁) ★
+    ============================================================== */
     @media print {
       @page {
         size: 215.9mm 139.7mm landscape;
@@ -62,7 +64,7 @@
         width: 195mm !important;
         height: 128mm !important;
         margin-left: 4mm !important;
-        margin-top: 6.5mm !important; /* 版面下移避開撕紙線 */
+        margin-top: 6.5mm !important; /* 版面微調下移，完全避開撕紙線 */
         padding: 0 !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
@@ -133,7 +135,7 @@
         </div>
       </div>
 
-      <!-- 切換頁籤 (手機直接進現場師傅終端) -->
+      <!-- 切換頁籤 (手機預設直接進現場師傅終端) -->
       <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
         <button id="view-btn-shopfloor" onclick="switchView('shopfloor')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan-600 text-white shadow-md whitespace-nowrap">
           <i class="ph-bold ph-wrench text-sm sm:text-base"></i>
@@ -825,8 +827,8 @@
   ============================================================== -->
   <script>
     let orders = [];
-    let invoices = JSON.parse(localStorage.getItem('zh_cnc_invoices_v25')) || [];
-    let salesPersons = JSON.parse(localStorage.getItem('zh_cnc_sales_list_v25')) || ["徐佩萱", "陳宏嘉"];
+    let invoices = JSON.parse(localStorage.getItem('zh_cnc_invoices_v27')) || [];
+    let salesPersons = JSON.parse(localStorage.getItem('zh_cnc_sales_list_v27')) || ["徐佩萱", "陳宏嘉"];
     let currentFilter = 'ALL';
     let currentClientFilter = 'ALL';
     let currentOutsourceFilter = 'ALL';
@@ -834,26 +836,26 @@
     let pendingAuthTargetView = null;
 
     // 零件價格與交期主檔庫 (雙軌自動記憶)
-    let priceDatabase = JSON.parse(localStorage.getItem('zh_cnc_price_db_v25')) || [
+    let priceDatabase = JSON.parse(localStorage.getItem('zh_cnc_price_db_v27')) || [
       { client: "均豪精密工業股份有限公司", item: "6T291A1505", price: 180, lastDeliveryDate: "2026-10-25", notes: "定位閥座/AL6061硬陽" },
       { client: "均豪精密工業股份有限公司", item: "ZH-FIX-002", price: 350, lastDeliveryDate: "2026-10-20", notes: "S45C研磨治具" }
     ];
 
     // 四大主分類與自建細項工種庫
-    let outsourceCategories = JSON.parse(localStorage.getItem('zh_cnc_outsource_cats_v25')) || {
+    let outsourceCategories = JSON.parse(localStorage.getItem('zh_cnc_outsource_cats_v27')) || {
       "表面處理": ["本色陽極", "硬質陽極 (硬陽)", "黑色陽極", "化學鎳 (無電解鎳)", "染黑處置", "電解拋光"],
       "熱處理": ["真空淬火", "調質處置", "高週波硬化", "滲碳熱處理", "回火退火"],
       "機械協力": ["慢走絲線切割", "快走絲割外形", "放電加工 (EDM)", "平面精密研磨", "外圓精密研磨", "深孔槍鑽加工"],
       "板金/焊接/雷射": ["光纖雷射切割", "雷射切管", "氬焊加工", "CO2結構焊接", "CNC折床折彎"]
     };
 
-    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v25')) || [
+    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v27')) || [
       { name: "順捷精密陽極廠", mainCat: "表面處理", subtag: "硬質陽極 (硬陽)", contact: "林課長", phone: "03-361xxxx" },
       { name: "富貿真空熱處理", mainCat: "熱處理", subtag: "真空淬火", contact: "王廠長", phone: "03-375xxxx" },
       { name: "立興精密線切割", mainCat: "機械協力", subtag: "慢走絲線切割", contact: "陳師傅", phone: "03-368xxxx" }
     ];
 
-    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v25')) || [
+    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v27')) || [
       {
         id: "C001",
         name: "均豪精密工業股份有限公司",
@@ -866,7 +868,7 @@
       }
     ];
 
-    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v25')) || [
+    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v27')) || [
       { category: "碳鋼 / 合金鋼", name: "S45C (中碳鋼)" },
       { category: "碳鋼 / 合金鋼", name: "SS440 (中碳板)" },
       { category: "不鏽鋼系列", name: "SUS304 (耐蝕不鏽鋼)" },
@@ -996,7 +998,7 @@
     async function fetchCloudData(showToast) {
       const badge = document.getElementById('cloud-badge');
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('AKfycbx') === -1) {
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v25')) || [];
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v27')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -1032,7 +1034,7 @@
       } catch (e) {
         badge.className = "text-[10px] bg-amber-950 border border-amber-800 text-amber-300 px-1.5 py-0.2 rounded font-mono font-bold flex items-center gap-1";
         badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> 本地離線暫存';
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v25')) || [];
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v27')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -1040,7 +1042,7 @@
     }
 
     // ==============================================================
-    // ★ 關鍵亮點：輸入圖號自動向 Google Drive 搜尋配對圖檔 ★
+    // ★ 關鍵亮點：輸入圖號自動向 Google Drive 搜尋配對圖檔 (GET 模式無痛穿透) ★
     // ==============================================================
     async function autoFetchDrawingFromDrive(partNo) {
       partNo = (partNo || '').trim();
@@ -1052,11 +1054,10 @@
       statusEl.innerText = "🔍 正在搜尋雲端圖庫...";
 
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: "find_drawing", partNo: partNo })
-        });
+        const queryUrl = GOOGLE_SCRIPT_URL + '?action=find_drawing&partNo=' + encodeURIComponent(partNo);
+        const res = await fetch(queryUrl);
         const data = await res.json();
+        
         if (data.status === 'ok' && data.drawingUrl) {
           urlInput.value = data.drawingUrl;
           statusEl.className = "text-[11px] text-emerald-400 font-bold";
@@ -1064,7 +1065,7 @@
           showNotification("圖面配對成功", "已在雲端圖庫中找到【" + partNo + "】的 2D 圖紙！");
         } else {
           statusEl.className = "text-[11px] text-amber-400 font-mono";
-          statusEl.innerText = "⚠️ 圖庫中尚無同名檔案 (可稍後上傳或手動貼網址)";
+          statusEl.innerText = "⚠️ 圖庫中尚無符合檔名 (請確認資料夾內檔名含該圖號)";
         }
       } catch (err) {
         statusEl.className = "text-[11px] text-slate-500 font-mono";
@@ -1113,7 +1114,7 @@
       } else {
         priceDatabase.unshift({ client: clientName, item: item, price: price, lastDeliveryDate: deliveryDate, notes: "銷貨自動記憶建檔" });
       }
-      localStorage.setItem('zh_cnc_price_db_v25', JSON.stringify(priceDatabase));
+      localStorage.setItem('zh_cnc_price_db_v27', JSON.stringify(priceDatabase));
       renderPricesView();
     }
 
@@ -1143,7 +1144,7 @@
       recordOrUpdatePrice(client, item, price, date);
       let p = priceDatabase.find(function(x) { return x.client === client && x.item === item; });
       if (p) p.notes = notes;
-      localStorage.setItem('zh_cnc_price_db_v25', JSON.stringify(priceDatabase));
+      localStorage.setItem('zh_cnc_price_db_v27', JSON.stringify(priceDatabase));
 
       closeModal('add-price-modal');
       renderPricesView();
@@ -1182,7 +1183,7 @@
     function deletePriceItem(idx) {
       if (confirm("確定要刪除這筆零件單價紀錄嗎？")) {
         priceDatabase.splice(idx, 1);
-        localStorage.setItem('zh_cnc_price_db_v25', JSON.stringify(priceDatabase));
+        localStorage.setItem('zh_cnc_price_db_v27', JSON.stringify(priceDatabase));
         renderPricesView();
       }
     }
@@ -1244,7 +1245,7 @@
       if (!outsourceCategories[mainCat]) outsourceCategories[mainCat] = [];
       if (outsourceCategories[mainCat].indexOf(name) === -1) {
         outsourceCategories[mainCat].push(name);
-        localStorage.setItem('zh_cnc_outsource_cats_v25', JSON.stringify(outsourceCategories));
+        localStorage.setItem('zh_cnc_outsource_cats_v27', JSON.stringify(outsourceCategories));
         document.getElementById('new-subtag-name').value = '';
         renderSubtagsList();
         populateSubtagSelector('vendor-subtag', document.getElementById('vendor-main-cat').value);
@@ -1275,7 +1276,7 @@
     function deleteSubtag(mainCat, idx) {
       if (outsourceCategories[mainCat]) {
         outsourceCategories[mainCat].splice(idx, 1);
-        localStorage.setItem('zh_cnc_outsource_cats_v25', JSON.stringify(outsourceCategories));
+        localStorage.setItem('zh_cnc_outsource_cats_v27', JSON.stringify(outsourceCategories));
         renderSubtagsList();
         populateSubtagSelector('vendor-subtag', document.getElementById('vendor-main-cat').value);
         populateSubtagSelector('outsource-subtag', document.getElementById('outsource-main-cat').value);
@@ -1452,7 +1453,7 @@
 
       if (!salesPersons.includes(salesName)) {
         salesPersons.push(salesName);
-        localStorage.setItem('zh_cnc_sales_list_v25', JSON.stringify(salesPersons));
+        localStorage.setItem('zh_cnc_sales_list_v27', JSON.stringify(salesPersons));
         refreshSalesDatalist();
       }
 
@@ -1556,7 +1557,7 @@
 
       const record = { invoiceNo: invoiceNo, invoiceDate: invoiceDate, clientName: clientName, salesName: salesName, items: items, totalQty: totalQty, subtotal: subtotal, tax: tax, grandTotal: grandTotal, notes: notes, totalPages: totalPages };
       invoices.unshift(record);
-      localStorage.setItem('zh_cnc_invoices_v25', JSON.stringify(invoices));
+      localStorage.setItem('zh_cnc_invoices_v27', JSON.stringify(invoices));
       renderInvoicesTable();
       closeModal('invoice-modal');
 
@@ -1918,7 +1919,7 @@
         showNotification("工單已發布", "工單 " + orderNo + " 已同步儲存至 Google 雲端！");
       } catch (err) {
         orders.unshift(newOrder);
-        localStorage.setItem('zh_cnc_local_orders_v25', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v27', JSON.stringify(orders));
         closeModal('new-order-modal');
         document.getElementById('new-order-form').reset();
         document.getElementById('drawing-match-status').innerText = "等待輸入圖號...";
@@ -1951,7 +1952,7 @@
         if (o) {
           o.status = newStatus;
           o.completionData = { goodQty: goodQty, defectQty: defectQty, operator: operator };
-          localStorage.setItem('zh_cnc_local_orders_v25', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v27', JSON.stringify(orders));
         }
         closeModal('completion-modal');
         renderOfficeBoard();
@@ -2038,7 +2039,7 @@
       const o = orders.find(function(x) { return String(x.id).trim() === String(id).trim(); });
       if (o) {
         o.isArchived = !o.isArchived;
-        localStorage.setItem('zh_cnc_local_orders_v25', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v27', JSON.stringify(orders));
         renderOfficeBoard();
       }
     }
@@ -2069,7 +2070,7 @@
         payment: document.getElementById('client-payment').value.trim()
       };
       clients.push(clientData);
-      localStorage.setItem('zh_cnc_clients_v25', JSON.stringify(clients));
+      localStorage.setItem('zh_cnc_clients_v27', JSON.stringify(clients));
       closeModal('add-client-modal');
       refreshCustomerSelectDropdown();
       refreshBoardClientFilter();
@@ -2118,7 +2119,7 @@
       const phone = document.getElementById('vendor-phone').value.trim();
 
       vendors.push({ name: name, mainCat: mainCat, subtag: subtag, contact: contact, phone: phone });
-      localStorage.setItem('zh_cnc_vendors_v25', JSON.stringify(vendors));
+      localStorage.setItem('zh_cnc_vendors_v27', JSON.stringify(vendors));
       closeModal('add-vendor-modal');
       renderOutsourceBoard();
       filterOutsourceVendorsBySubtag(document.getElementById('outsource-main-cat').value, document.getElementById('outsource-subtag').value);
@@ -2172,7 +2173,7 @@
         if (o) {
           o.status = "外包中";
           o.outsourceData = outData;
-          localStorage.setItem('zh_cnc_local_orders_v25', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v27', JSON.stringify(orders));
         }
         closeModal('dispatch-outsource-modal');
         renderOfficeBoard();
