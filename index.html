@@ -3,13 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>誌宏機械有限公司 - CNC 生產進度與中一刀銷貨管理系統</title>
+  <title>誌宏機械有限公司 - CNC圖面版本、工單進度、客戶與品質外包管理系統</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-    body { font-family: 'Noto Sans TC', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
     .font-tech { font-family: 'Chakra Petch', sans-serif; }
     .tactile-btn { transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1); }
     .tactile-btn:active { transform: scale(0.96); }
@@ -22,68 +30,19 @@
         linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
       background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
     }
-    @keyframes slideInDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideInDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
     .animate-notify { animation: slideInDown 0.3s ease-out forwards; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-
-    /* ==============================================================
-       ★ 中一刀專用列印樣式 (寬度 195mm 避孔、每頁 8 格、強制斷頁) ★
-    ============================================================== */
-    @media print {
-      @page {
-        size: 215.9mm 139.7mm landscape;
-        margin: 0;
-      }
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #ffffff !important;
-      }
-      body * {
-        visibility: hidden !important;
-      }
-      #printable-invoice-container, #printable-invoice-container * {
-        visibility: visible !important;
-      }
-      #printable-invoice-container {
-        display: block !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #ffffff !important;
-      }
-      .printable-invoice-page {
-        display: block !important;
-        page-break-after: always !important;
-        break-after: page !important;
-        width: 195mm !important;
-        height: 128mm !important;
-        margin-left: 4mm !important;
-        margin-top: 6.5mm !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-        background: #ffffff !important;
-        color: #000000 !important;
-        position: relative !important;
-      }
-      .printable-invoice-page:last-child {
-        page-break-after: auto !important;
-        break-after: auto !important;
-      }
-    }
-    .invoice-table { border-collapse: collapse; width: 100%; border: 1.2px solid #000; }
-    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 3px 4px; font-size: 11px; }
   </style>
 </head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
 
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col blueprint-grid selection:bg-cyan-500 selection:text-slate-950">
-
-  <!-- 頂部通知浮條 -->
+  <!-- 通知浮條 -->
   <div id="notification-bar" class="fixed top-0 left-0 right-0 z-50 pointer-events-none flex justify-center p-3 hidden">
     <div id="notification-content" class="pointer-events-auto bg-slate-900/95 border border-cyan-500/50 text-cyan-200 px-5 py-2.5 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-notify">
       <i id="notification-icon" class="ph-bold ph-info text-cyan-400 text-lg"></i>
@@ -94,228 +53,231 @@
     </div>
   </div>
 
-  <!-- 主導覽列 -->
-  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-        <i class="ph-bold ph-gear-six text-slate-950 text-xl animate-spin" style="animation-duration: 12s;"></i>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="font-tech font-bold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-white">誌宏機械</span>
-          <span class="text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-400 px-1.5 py-0.5 rounded font-mono font-bold">CNC MES 2.0</span>
+  <!-- ===============================
+       頂部專業工控導航列
+  =============================== -->
+  <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md px-3 sm:px-6 py-2.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 text-white text-xl shrink-0 font-black">
+          <i class="ph-bold ph-gear-six"></i>
         </div>
-        <p class="text-[11px] text-slate-400 tracking-tight">精密銑削加工與雲端排產管制系統</p>
+        <div>
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <span class="font-black text-sm sm:text-base text-white tracking-wide">誌宏機械有限公司</span>
+            <span class="text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-1.5 py-0.2 rounded font-mono font-bold hidden sm:inline-block">ZHIHONG CNC</span>
+          </div>
+          <p class="text-[11px] text-slate-400">圖面版本控管 · 現場拍照報工 · 外包表處追蹤 · 客戶檔案管理</p>
+        </div>
+      </div>
+
+      <!-- 視角切換器 (Tab) -->
+      <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
+        <button id="view-btn-office" onclick="switchView('office')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan-600 text-white shadow-md whitespace-nowrap">
+          <i class="ph-bold ph-buildings text-sm sm:text-base"></i>
+          <span>辦公室看板</span>
+        </button>
+        <button id="view-btn-clients" onclick="switchView('clients')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap">
+          <i class="ph-bold ph-address-book text-sm sm:text-base"></i>
+          <span>客戶資料庫</span>
+        </button>
+        <button id="view-btn-quality" onclick="switchView('quality')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap">
+          <i class="ph-bold ph-chart-donut text-sm sm:text-base"></i>
+          <span>品質與不良分析</span>
+          <span id="badge-nav-defects" class="hidden px-1.5 py-0.2 rounded-full text-[10px] bg-rose-600 text-white font-mono font-bold">0</span>
+        </button>
+        <button id="view-btn-outsource" onclick="switchView('outsource')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap">
+          <i class="ph-bold ph-truck text-sm sm:text-base"></i>
+          <span>外包廠追蹤</span>
+          <span id="badge-nav-outsource" class="hidden px-1.5 py-0.2 rounded-full text-[10px] bg-purple-600 text-white font-mono font-bold">0</span>
+        </button>
+        <button id="view-btn-shopfloor" onclick="switchView('shopfloor')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap">
+          <i class="ph-bold ph-wrench text-sm sm:text-base"></i>
+          <span>現場師傅終端</span>
+        </button>
+      </div>
+
+      <!-- 右側同步按鈕 -->
+      <div class="hidden xl:flex items-center gap-2">
+        <button onclick="fetchOrdersFromCloud()" title="重新與 Google 試算表同步" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition flex items-center gap-1.5">
+          <i class="ph-bold ph-arrows-clockwise text-base text-cyan-400"></i>
+          <span>同步雲端</span>
+        </button>
       </div>
     </div>
-
-    <!-- 視圖切換標籤 -->
-    <nav class="flex items-center bg-slate-950/70 border border-slate-800 p-1 rounded-xl gap-1">
-      <button onclick="switchView('orders')" id="nav-orders" class="tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20">
-        <i class="ph-bold ph-clipboard-text"></i>
-        <span>工單看板</span>
-      </button>
-      <button onclick="switchView('terminal')" id="nav-terminal" class="tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
-        <i class="ph-bold ph-screencast"></i>
-        <span>機台報工終端</span>
-      </button>
-      <button onclick="switchView('outsource')" id="nav-outsource" class="tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
-        <i class="ph-bold ph-truck"></i>
-        <span>外包管制</span>
-      </button>
-      <button onclick="switchView('invoice')" id="nav-invoice" class="tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
-        <i class="ph-bold ph-printer"></i>
-        <span>中一刀銷貨單</span>
-      </button>
-    </nav>
   </header>
 
-  <!-- 主要內容區 -->
-  <main class="flex-1 p-4 max-w-7xl w-full mx-auto">
+  <!-- ===============================
+       主工作區域
+  =============================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 md:p-6">
 
-    <!-- ==================== 1. 工單總覽與排程看板 ==================== -->
-    <section id="view-orders" class="space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3 rounded-2xl">
-        <div class="flex items-center gap-2">
-          <button onclick="openCreateModal()" class="tactile-btn bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 shadow-lg shadow-cyan-500/25">
-            <i class="ph-bold ph-plus-circle text-base"></i>
-            <span>建立新工單</span>
-          </button>
-          <button onclick="fetchOrdersFromCloud()" class="tactile-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
-            <i class="ph-bold ph-arrows-clockwise text-sm"></i>
-            <span>重新整理</span>
-          </button>
+    <!-- VIEW 1: 辦公室看板 -->
+    <section id="office-view" class="space-y-5">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <span>誌宏機械 · 全廠工單圖面與流轉總覽</span>
+          </h1>
+          <p class="text-xs text-slate-400 mt-0.5">管控工程圖面版次、下發機台加工、並追蹤後續外包陽極與熱處理進度。</p>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="relative">
-            <i class="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-            <input type="text" id="order-search" oninput="renderOrdersTable()" placeholder="搜尋工單 / 圖號 / 客戶..." class="bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-48 sm:w-64 transition-all">
-          </div>
-          <select id="order-filter-status" onchange="renderOrdersTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500">
-            <option value="ALL">全部狀態</option>
-            <option value="待加工">待加工</option>
-            <option value="加工中">加工中</option>
-            <option value="外包中">外包中</option>
-            <option value="已完成">已完成</option>
-          </select>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button onclick="exportCompletedOrdersCSV()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm tactile-btn flex items-center justify-center gap-1.5 shadow">
+            <i class="ph-bold ph-download-simple text-cyan-400"></i>
+            <span>匯出完工工單 CSV</span>
+          </button>
+          <button onclick="openModal('new-order-modal')" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-cyan-600/20 tactile-btn">
+            <i class="ph-bold ph-plus-circle text-base sm:text-lg"></i>
+            <span>建立新工單 (發圖)</span>
+          </button>
         </div>
       </div>
 
-      <!-- 工單清單表格 -->
-      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm">
+      <!-- 數據指標卡 -->
+      <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
+        <div class="bg-slate-900/90 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
+          <div class="text-xs text-slate-400 font-medium">總運行工單</div>
+          <div id="stat-total" class="text-xl sm:text-2xl font-bold font-tech text-white mt-0.5">0</div>
+        </div>
+        <div class="bg-amber-950/20 border border-amber-900/40 p-3 sm:p-3.5 rounded-xl">
+          <div class="text-xs text-amber-400 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>待排工
+          </div>
+          <div id="stat-pending" class="text-xl sm:text-2xl font-bold font-tech text-amber-300 mt-0.5">0</div>
+        </div>
+        <div class="bg-blue-950/20 border border-blue-900/40 p-3 sm:p-3.5 rounded-xl">
+          <div class="text-xs text-blue-400 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-blue-400"></span>銑削中
+          </div>
+          <div id="stat-milling" class="text-xl sm:text-2xl font-bold font-tech text-blue-300 mt-0.5">0</div>
+        </div>
+        <div class="bg-purple-950/20 border border-purple-900/40 p-3 sm:p-3.5 rounded-xl">
+          <div class="text-xs text-purple-400 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-purple-400"></span>外包中
+          </div>
+          <div id="stat-outsource" class="text-xl sm:text-2xl font-bold font-tech text-purple-300 mt-0.5">0</div>
+        </div>
+        <div class="bg-emerald-950/20 border border-emerald-900/40 p-3 sm:p-3.5 rounded-xl">
+          <div class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>已完工
+          </div>
+          <div id="stat-completed" class="text-xl sm:text-2xl font-bold font-tech text-emerald-300 mt-0.5">0</div>
+        </div>
+        <div class="bg-rose-950/20 border border-rose-900/40 p-3 sm:p-3.5 rounded-xl">
+          <div class="text-xs text-rose-400 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-rose-400"></span>不良品總計
+          </div>
+          <div id="stat-defects" class="text-xl sm:text-2xl font-bold font-tech text-rose-300 mt-0.5">0</div>
+        </div>
+      </div>
+
+      <!-- 工單清單表格與篩選 -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
+        <div class="p-3 sm:p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-sm text-white">生產工單管理</span>
+            <span id="order-count-badge" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">0</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="order-search-input" oninput="renderOrdersTable()" placeholder="搜尋工單 / 圖號 / 客戶..." class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-44 sm:w-60">
+            <select id="order-filter-status" onchange="renderOrdersTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500">
+              <option value="ALL">全部狀態</option>
+              <option value="待加工">待排工</option>
+              <option value="加工中">銑削中</option>
+              <option value="外包中">外包中</option>
+              <option value="已完成">已完工</option>
+            </select>
+          </div>
+        </div>
+
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
-            <thead class="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[11px]">
+            <thead class="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono text-[11px]">
               <tr>
-                <th class="p-3">工單編號</th>
+                <th class="p-3">工單號碼</th>
                 <th class="p-3">零件名稱 / 圖號</th>
                 <th class="p-3">客戶名稱</th>
                 <th class="p-3">材質規格</th>
-                <th class="p-3">機台</th>
+                <th class="p-3">加工機台</th>
                 <th class="p-3 text-right">目標數</th>
                 <th class="p-3">交貨日期</th>
                 <th class="p-3 text-center">狀態</th>
-                <th class="p-3 text-center">圖面</th>
+                <th class="p-3 text-center">工程圖面</th>
                 <th class="p-3 text-center">操作</th>
               </tr>
             </thead>
             <tbody id="orders-table-body" class="divide-y divide-slate-800/60 font-medium">
-              <!-- 動態渲染工單資料 -->
+              <!-- 動態渲染工單 -->
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- ==================== 2. 現場師傅機台終端 ==================== -->
-    <section id="view-terminal" class="space-y-4 hidden">
-      <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-            <i class="ph-bold ph-hard-hat text-2xl"></i>
-          </div>
-          <div>
-            <h2 class="font-bold text-sm text-white">現場加工與 2D 圖面即時檢視終端</h2>
-            <p class="text-[11px] text-slate-400">點選左側工單，即時內嵌預覽 Google 雲端工程圖紙與線上首件自檢報工</p>
-          </div>
+    <!-- VIEW 2: 客戶資料庫 -->
+    <section id="clients-view" class="space-y-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="font-bold text-sm sm:text-base text-white">配合客戶名冊與交易歷程</h2>
+          <p class="text-xs text-slate-400">均豪精密、盟立自動化等重點合作夥伴專案管理與付款條款紀錄</p>
         </div>
-        <select id="terminal-machine-filter" onchange="renderTerminalList()" class="bg-slate-950 border border-slate-800 text-xs px-3 py-2 rounded-xl text-cyan-300 font-mono">
-          <option value="ALL">全部機台工單</option>
-          <option value="No1 立式中心加工機">No1 立式中心加工機</option>
-          <option value="No2 高速雕銑機">No2 高速雕銑機</option>
-          <option value="No3 四軸複合加工機">No3 四軸複合加工機</option>
-          <option value="No5 精密零件研磨機">No5 精密零件研磨機</option>
-        </select>
       </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="clients-card-container">
+        <!-- 動態渲染客戶清單 -->
+      </div>
+    </section>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <!-- 左側：待加工工單清單 -->
-        <div class="lg:col-span-4 space-y-2.5 max-h-[720px] overflow-y-auto pr-1" id="terminal-orders-list">
-          <!-- 動態渲染工單卡片 -->
+    <!-- VIEW 3: 品質與不良分析 -->
+    <section id="quality-view" class="space-y-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="font-bold text-sm sm:text-base text-white">加工首件品檢與不良原因統計</h2>
+          <p class="text-xs text-slate-400">分析銑削超差、毛邊、撞刀與材質變形數據，優化 CNC 程式切削參數</p>
         </div>
-
-        <!-- 右側：2D 圖面檢視器與自檢報工面板 -->
-        <div class="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col min-h-[640px] shadow-2xl relative">
-          <div id="terminal-viewer-empty" class="flex-1 flex flex-col items-center justify-center text-slate-500 py-16">
-            <i class="ph-light ph-file-dashed text-6xl mb-3 text-slate-600"></i>
-            <p class="text-sm font-medium">請從左側點選一張工單以開啟 2D PDF 圖面與報工介面</p>
-          </div>
-
-          <div id="terminal-viewer-active" class="flex-1 flex flex-col space-y-3 hidden">
-            <!-- 圖面標題與快速動作 -->
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <span id="active-workorder-id" class="text-xs font-mono font-bold text-cyan-400"></span>
-                <h3 id="active-part-name" class="font-bold text-base text-white"></h3>
-              </div>
-              <div class="flex items-center gap-2">
-                <a id="active-drawing-external-link" href="#" target="_blank" class="tactile-btn text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
-                  <i class="ph-bold ph-arrow-square-out"></i>
-                  <span>新視窗開啟圖檔</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- 2D PDF 內嵌預覽框架 (直接使用轉換後的 /preview 模式) -->
-            <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden min-h-[460px] relative">
-              <iframe id="terminal-pdf-iframe" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
-            </div>
-
-            <!-- 師傅完工 / 自檢快速輸入區 -->
-            <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center gap-4 text-xs">
-                <label class="flex items-center gap-1.5 text-slate-300">
-                  <span>良品數:</span>
-                  <input type="number" id="operator-good-qty" class="w-16 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-emerald-400 font-mono font-bold focus:outline-none focus:border-cyan-500" value="0">
-                </label>
-                <label class="flex items-center gap-1.5 text-slate-300">
-                  <span>不良數:</span>
-                  <input type="number" id="operator-defect-qty" class="w-16 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-rose-400 font-mono font-bold focus:outline-none focus:border-cyan-500" value="0">
-                </label>
-                <label class="flex items-center gap-1.5 text-slate-300">
-                  <span>操作員:</span>
-                  <input type="text" id="operator-name" class="w-20 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-cyan-300 focus:outline-none focus:border-cyan-500" placeholder="姓名">
-                </label>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <button onclick="submitOperatorReport('外包中')" class="tactile-btn bg-amber-600 hover:bg-amber-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1">
-                  <i class="ph-bold ph-truck"></i>
-                  <span>送外包處理</span>
-                </button>
-                <button onclick="submitOperatorReport('已完成')" class="tactile-btn bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-1.5 rounded-lg text-xs font-black flex items-center gap-1 shadow-lg shadow-emerald-500/20">
-                  <i class="ph-bold ph-check-circle"></i>
-                  <span>回報完工</span>
-                </button>
-              </div>
-            </div>
-          </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl border-l-4 border-l-rose-500">
+          <p class="text-xs text-slate-400">尺寸超差 (公差過緊)</p>
+          <p id="stat-defect-dim" class="text-2xl font-tech font-bold text-rose-400 mt-1">0 件</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl border-l-4 border-l-amber-500">
+          <p class="text-xs text-slate-400">刀痕過深 / 面粗度不良</p>
+          <p id="stat-defect-surf" class="text-2xl font-tech font-bold text-amber-400 mt-1">0 件</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl border-l-4 border-l-cyan-500">
+          <p class="text-xs text-slate-400">素材變形 / 夾持應力</p>
+          <p id="stat-defect-warp" class="text-2xl font-tech font-bold text-cyan-400 mt-1">0 件</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl border-l-4 border-l-emerald-500">
+          <p class="text-xs text-slate-400">平均良品率</p>
+          <p id="stat-yield-rate" class="text-2xl font-tech font-bold text-emerald-400 mt-1">98.5%</p>
+        </div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h3 class="font-bold text-xs text-slate-400 mb-3 uppercase tracking-wider">不良事件流轉紀錄</h3>
+        <div id="defects-log-list" class="space-y-2 text-xs">
+          <!-- 動態不良紀錄 -->
         </div>
       </div>
     </section>
 
-    <!-- ==================== 3. 四大類外包加工管制 ==================== -->
-    <section id="view-outsource" class="space-y-4 hidden">
-      <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+    <!-- VIEW 4: 外包廠追蹤 -->
+    <section id="outsource-view" class="space-y-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="font-bold text-sm text-white">精密零件外包製程管控 (陽極 / 熱處理 / 染黑 / 研磨)</h2>
-          <p class="text-[11px] text-slate-400">追蹤廠外二次加工交期與回廠良品狀況</p>
-        </div>
-        <button onclick="openOutsourceDispatchModal()" class="tactile-btn bg-indigo-500 hover:bg-indigo-400 text-slate-950 px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5">
-          <i class="ph-bold ph-paper-plane-tilt text-sm"></i>
-          <span>開立外包發料單</span>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl border-t-2 border-t-cyan-500">
-          <p class="text-xs text-slate-400">表面處理 (陽極/電鍍)</p>
-          <p id="stat-outsource-anodizing" class="text-xl font-bold font-mono text-cyan-400 mt-1">0 筆</p>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl border-t-2 border-t-amber-500">
-          <p class="text-xs text-slate-400">熱處理 (滲碳/高週波)</p>
-          <p id="stat-outsource-heat" class="text-xl font-bold font-mono text-amber-400 mt-1">0 筆</p>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl border-t-2 border-t-indigo-500">
-          <p class="text-xs text-slate-400">染黑 / 鈍化防鏽</p>
-          <p id="stat-outsource-black" class="text-xl font-bold font-mono text-indigo-400 mt-1">0 筆</p>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl border-t-2 border-t-emerald-500">
-          <p class="text-xs text-slate-400">外外研磨 / 放電加工</p>
-          <p id="stat-outsource-grind" class="text-xl font-bold font-mono text-emerald-400 mt-1">0 筆</p>
+          <h2 class="font-bold text-sm sm:text-base text-white">精密零件外包二次加工進度管制</h2>
+          <p class="text-xs text-slate-400">陽極硬化、高週波熱處理、低溫染黑、精密無心研磨協力廠追蹤</p>
         </div>
       </div>
-
-      <!-- 外包動態清單 -->
-      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono text-[11px]">
             <tr>
               <th class="p-3">工單號碼</th>
               <th class="p-3">零件名稱</th>
-              <th class="p-3">外包類別</th>
               <th class="p-3">委外廠商</th>
-              <th class="p-3 text-right">出貨數量</th>
+              <th class="p-3">處理項目</th>
+              <th class="p-3 text-right">出貨件數</th>
               <th class="p-3">預計回廠日</th>
               <th class="p-3 text-center">外包狀態</th>
               <th class="p-3 text-center">操作</th>
@@ -328,45 +290,98 @@
       </div>
     </section>
 
-    <!-- ==================== 4. 中一刀銷貨單預覽與列印 ==================== -->
-    <section id="view-invoice" class="space-y-4 hidden">
-      <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+    <!-- VIEW 5: 現場師傅終端 (機台與 2D PDF 即時圖面) -->
+    <section id="shopfloor-view" class="space-y-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="font-bold text-sm text-white">點陣式印表機「中一刀」專用銷貨單列印系統</h2>
-          <p class="text-[11px] text-slate-400">專為雙向打孔連打單設計：寬度 195mm 避孔、每張固定 8 格滿版、強制分頁不跳格</p>
+          <h2 class="font-bold text-sm sm:text-base text-white">現場加工與 2D 雲端工程圖紙終端</h2>
+          <p class="text-xs text-slate-400">點選左側排程工單，自動同步內嵌載入 2D PDF 圖紙並支援現場報工</p>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="prepareInvoiceData()" class="tactile-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
-            <i class="ph-bold ph-arrows-clockwise"></i>
-            <span>載入已完工工單</span>
-          </button>
-          <button onclick="window.print()" class="tactile-btn bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-4 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-lg shadow-cyan-500/25">
-            <i class="ph-bold ph-printer text-base"></i>
-            <span>立即列印中一刀銷貨單</span>
-          </button>
-        </div>
+        <select id="terminal-machine-filter" onchange="renderTerminalList()" class="bg-slate-950 border border-slate-800 text-xs px-3 py-2 rounded-xl text-cyan-300 font-mono">
+          <option value="ALL">全部機台</option>
+          <option value="No1 立式中心加工機">No1 立式中心加工機</option>
+          <option value="No2 高速雕銑機">No2 高速雕銑機</option>
+          <option value="No3 四軸複合加工機">No3 四軸複合加工機</option>
+          <option value="No5 精密零件研磨機">No5 精密零件研磨機</option>
+        </select>
       </div>
 
-      <!-- 螢幕版預覽框架 -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 flex flex-col items-center">
-        <p class="text-xs text-slate-400 mb-4">下方為 A4/中一刀（215.9mm × 139.7mm）列印排版精確預覽：</p>
-        <div id="screen-invoice-preview" class="w-full max-w-[820px] bg-white text-slate-900 p-6 rounded-lg shadow-2xl overflow-x-auto">
-          <!-- 動態填入銷貨單版面 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- 左側：待銑削工單清單 -->
+        <div class="lg:col-span-4 space-y-2.5 max-h-[720px] overflow-y-auto pr-1" id="terminal-orders-list">
+          <!-- 工單卡片 -->
+        </div>
+
+        <!-- 右側：2D PDF 圖面內嵌與自檢完工面板 -->
+        <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col min-h-[640px] shadow relative">
+          <div id="terminal-viewer-empty" class="flex-1 flex flex-col items-center justify-center text-slate-500 py-16">
+            <i class="ph-light ph-file-dashed text-6xl mb-3 text-slate-600"></i>
+            <p class="text-sm font-medium">請從左側點選工單以開啟 2D PDF 圖紙與線上報工介面</p>
+          </div>
+
+          <div id="terminal-viewer-active" class="flex-1 flex flex-col space-y-3 hidden">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <span id="active-workorder-id" class="text-xs font-mono font-bold text-cyan-400"></span>
+                <h3 id="active-part-name" class="font-bold text-base text-white"></h3>
+              </div>
+              <a id="active-drawing-external-link" href="#" target="_blank" class="tactile-btn text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
+                <i class="ph-bold ph-arrow-square-out"></i>
+                <span>新視窗檢視原圖</span>
+              </a>
+            </div>
+
+            <!-- PDF 圖面內嵌 (使用 preview 格式) -->
+            <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden min-h-[460px] relative">
+              <iframe id="terminal-pdf-iframe" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
+            </div>
+
+            <!-- 師傅快速報工欄 -->
+            <div class="bg-slate-950/90 border border-slate-800 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex items-center gap-4">
+                <label class="flex items-center gap-1.5 text-slate-300">
+                  <span>良品數:</span>
+                  <input type="number" id="operator-good-qty" class="w-16 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-emerald-400 font-mono font-bold" value="0">
+                </label>
+                <label class="flex items-center gap-1.5 text-slate-300">
+                  <span>不良數:</span>
+                  <input type="number" id="operator-defect-qty" class="w-16 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-rose-400 font-mono font-bold" value="0">
+                </label>
+                <label class="flex items-center gap-1.5 text-slate-300">
+                  <span>操作員:</span>
+                  <input type="text" id="operator-name" class="w-20 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-cyan-300" placeholder="姓名">
+                </label>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button onclick="submitOperatorReport('外包中')" class="tactile-btn bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                  <i class="ph-bold ph-truck"></i>
+                  <span>送外包</span>
+                </button>
+                <button onclick="submitOperatorReport('已完成')" class="tactile-btn bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-1.5 rounded-lg text-xs font-black flex items-center gap-1 shadow">
+                  <i class="ph-bold ph-check-circle"></i>
+                  <span>完工報工</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- ==================== 彈出視窗：建立新工單 ==================== -->
-  <div id="modal-create-order" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <!-- ===============================
+       彈出視窗：建立新工單 (發圖)
+  =============================== -->
+  <div id="new-order-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="font-bold text-sm text-white flex items-center gap-2">
           <i class="ph-bold ph-plus-circle text-cyan-400"></i>
-          <span>開立新加工工單</span>
+          <span>開立新工單 (發圖)</span>
         </h3>
-        <button onclick="closeCreateModal()" class="text-slate-400 hover:text-white">
+        <button onclick="closeModal('new-order-modal')" class="text-slate-400 hover:text-white">
           <i class="ph-bold ph-x text-lg"></i>
         </button>
       </div>
@@ -374,22 +389,22 @@
       <form id="create-order-form" onsubmit="handleCreateOrder(event)" class="space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-400 mb-1">工單編號</label>
-            <input type="text" id="form-order-id" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold focus:outline-none focus:border-cyan-500" readonly>
+            <label class="block text-slate-400 mb-1">工單號碼</label>
+            <input type="text" id="form-order-id" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold" readonly>
           </div>
           <div>
             <label class="block text-slate-400 mb-1">客戶名稱</label>
-            <input type="text" id="form-customer" required placeholder="如：均豪精密" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+            <input type="text" id="form-customer" required placeholder="如：均豪精密工業股份有限公司" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-cyan-500">
           </div>
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="text-slate-400">零件名稱 / 2D 圖號</label>
-            <span id="drawing-match-status" class="text-[11px] text-cyan-400 font-mono">輸入後自動匹配雲端圖紙</span>
+            <label class="text-slate-400">零件圖號 / 圖名</label>
+            <span id="drawing-match-status" class="text-[11px] text-cyan-400 font-mono">輸入圖號後自動匹配雲端圖紙</span>
           </div>
           <div class="flex items-center gap-2">
-            <input type="text" id="form-part-name" oninput="debounceFetchDrawing(this.value)" required placeholder="例如：ABC 或 abc.pdf" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
+            <input type="text" id="form-part-name" oninput="debounceFetchDrawing(this.value)" required placeholder="例如：ABC 或 abc.pdf" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-cyan-500">
             <button type="button" onclick="autoFetchDrawingFromDrive(document.getElementById('form-part-name').value)" class="tactile-btn bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold">
               重抓
             </button>
@@ -399,11 +414,11 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-slate-400 mb-1">材質規格</label>
-            <input type="text" id="form-material" placeholder="如：S45C / 鋁合金 6061" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+            <input type="text" id="form-material" placeholder="如：S45C / AL6061 / PEEK" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-cyan-500">
           </div>
           <div>
             <label class="block text-slate-400 mb-1">加工機台</label>
-            <select id="form-machine" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+            <select id="form-machine" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-cyan-500">
               <option value="No1 立式中心加工機">No1 立式中心加工機</option>
               <option value="No2 高速雕銑機">No2 高速雕銑機</option>
               <option value="No3 四軸複合加工機">No3 四軸複合加工機</option>
@@ -414,110 +429,97 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-400 mb-1">目標加工數量</label>
-            <input type="number" id="form-target-qty" min="1" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500" value="10">
+            <label class="block text-slate-400 mb-1">目標數量</label>
+            <input type="number" id="form-target-qty" min="1" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono" value="10">
           </div>
           <div>
             <label class="block text-slate-400 mb-1">交貨日期</label>
-            <input type="date" id="form-due-date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+            <input type="date" id="form-due-date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white">
           </div>
         </div>
 
         <div>
-          <label class="block text-slate-400 mb-1">工程圖面連結 (Google 雲端自動填入或手動輸入)</label>
-          <input type="text" id="form-drawing-url" placeholder="https://drive.google.com/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-cyan-300 font-mono text-[11px] focus:outline-none focus:border-cyan-500">
+          <label class="block text-slate-400 mb-1">工程圖面連結 (Google 雲端自動帶入)</label>
+          <input type="text" id="form-drawing-url" placeholder="https://drive.google.com/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-cyan-300 font-mono text-[11px] focus:border-cyan-500">
         </div>
 
         <div>
-          <label class="block text-slate-400 mb-1">加工備註 / 工藝要求</label>
-          <textarea id="form-notes" rows="2" placeholder="公差要求、預留研磨量或外包特殊規格..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"></textarea>
+          <label class="block text-slate-400 mb-1">備註 / 外包特殊要求</label>
+          <textarea id="form-notes" rows="2" placeholder="公差限制、外包陽極或熱處理要求..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"></textarea>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-          <button type="button" onclick="closeCreateModal()" class="tactile-btn px-4 py-2 rounded-xl text-slate-400 hover:text-white">取消</button>
-          <button type="submit" class="tactile-btn bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl shadow-lg shadow-cyan-500/20">發布工單</button>
+          <button type="button" onclick="closeModal('new-order-modal')" class="tactile-btn px-4 py-2 rounded-xl text-slate-400 hover:text-white">取消</button>
+          <button type="submit" class="tactile-btn bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-2 rounded-xl shadow">發布工單</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 列印專用隱藏容器 (列印時才被 @media print 顯示) -->
-  <div id="printable-invoice-container" class="hidden"></div>
-
-  <!-- ==================== 核心邏輯與後台 API 串接 ==================== -->
+  <!-- ===============================
+       JavaScript 核心運算
+  =============================== -->
   <script>
-    // ★ 誌宏機械專用 Google Apps Script 後台網址 (已填入您的最新部署網址) ★
+    // ★ 誌宏機械專用 Google Apps Script 後台網址 ★
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvgI6ntC0i_Q9PrTvXQ60HnqJvyF6enkCeDFOgJdny7YNkEWyZ-fYiwLj6ywLqXLJ4/exec';
-    const DRAWINGS_FOLDER_ID = '1KJ7VvbyUpEmTutIIaGL6pDP_gO12mFCW';
 
-    // 本地快取工單資料
     let ordersList = [];
     let currentActiveOrder = null;
     let fetchTimer = null;
 
-    // 初始化頁面
+    // 客戶基本資料快取
+    const CLIENTS_DATA = [
+      { name: "均豪精密工業股份有限公司", contact: "李協理 / 生管課", phone: "03-560-xxxx", terms: "月結 60 天", parts: "半導體檢測治具、真空吸盤、精密載台" },
+      { name: "盟立自動化股份有限公司", contact: "陳工程師", phone: "03-578-xxxx", terms: "月結 45 天", parts: "無塵室傳送機構件、伺服馬達轉接座" },
+      { name: "元利盛精密機械", contact: "張副理", phone: "03-452-xxxx", terms: "月結 30 天", parts: "貼片機精密滑塊、導軌固定座" }
+    ];
+
     window.addEventListener('DOMContentLoaded', () => {
-      // 預設交期為一週後
       const today = new Date();
       today.setDate(today.getDate() + 7);
       document.getElementById('form-due-date').value = today.toISOString().split('T')[0];
       
-      // 從 Google 雲端拉取最新工單
+      renderClients();
       fetchOrdersFromCloud();
     });
 
-    // 視圖切換
+    // 視角切換器
     function switchView(viewName) {
-      const views = ['orders', 'terminal', 'outsource', 'invoice'];
+      const views = ['office', 'clients', 'quality', 'outsource', 'shopfloor'];
       views.forEach(v => {
-        const el = document.getElementById(`view-${v}`);
-        const nav = document.getElementById(`nav-${v}`);
+        const el = document.getElementById(`${v}-view`);
+        const btn = document.getElementById(`view-btn-${v}`);
         if (v === viewName) {
           el.classList.remove('hidden');
-          nav.className = "tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20";
+          btn.className = "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan-600 text-white shadow-md whitespace-nowrap";
         } else {
           el.classList.add('hidden');
-          nav.className = "tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200";
+          btn.className = "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap";
         }
       });
 
-      if (viewName === 'terminal') renderTerminalList();
+      if (viewName === 'shopfloor') renderTerminalList();
       if (viewName === 'outsource') renderOutsourceTable();
-      if (viewName === 'invoice') prepareInvoiceData();
+      if (viewName === 'quality') renderQualityStats();
     }
 
-    // 訊息通知提示
+    // 浮條提示
     function showNotification(title, msg, isError = false) {
       const bar = document.getElementById('notification-bar');
-      const t = document.getElementById('notification-title');
-      const m = document.getElementById('notification-msg');
-      const icon = document.getElementById('notification-icon');
-      
-      t.innerText = title;
-      m.innerText = msg;
-      
-      if (isError) {
-        icon.className = "ph-bold ph-warning text-rose-400 text-lg";
-        t.className = "font-bold text-xs uppercase tracking-wider text-rose-400";
-      } else {
-        icon.className = "ph-bold ph-check-circle text-cyan-400 text-lg";
-        t.className = "font-bold text-xs uppercase tracking-wider text-cyan-400";
-      }
-
+      document.getElementById('notification-title').innerText = title;
+      document.getElementById('notification-msg').innerText = msg;
       bar.classList.remove('hidden');
-      setTimeout(() => { bar.classList.add('hidden'); }, 3800);
+      setTimeout(() => { bar.classList.add('hidden'); }, 3500);
     }
 
-    // 將 Google 雲端檢視網址轉為內嵌預覽專用的 /preview 格式
+    // 將 Google 雲端檢視連結轉為 iframe 預覽用的 /preview 格式
     function formatDrivePreviewUrl(url) {
       if (!url) return '';
       let formatted = url.trim();
       if (formatted.indexOf('drive.google.com') !== -1) {
-        // 如果帶有 /view，轉為 /preview
         if (formatted.endsWith('/view?usp=sharing') || formatted.endsWith('/view')) {
           formatted = formatted.replace(/\/view(\?usp=sharing)?$/, '/preview');
         } else if (!formatted.endsWith('/preview')) {
-          // 擷取 /d/ 之後的 ID
           const match = formatted.match(/\/d\/([a-zA-Z0-9_-]+)/);
           if (match && match[1]) {
             formatted = `https://drive.google.com/file/d/${match[1]}/preview`;
@@ -527,20 +529,18 @@
       return formatted;
     }
 
-    // ==============================================================
-    // ★ 從 Google 雲端自動配對 2D 圖紙 (支援後台查詢與前台預測) ★
-    // ==============================================================
+    // 自動匹配雲端圖庫檔案
     function debounceFetchDrawing(val) {
       clearTimeout(fetchTimer);
       fetchTimer = setTimeout(() => {
         autoFetchDrawingFromDrive(val);
-      }, 600);
+      }, 500);
     }
 
     async function autoFetchDrawingFromDrive(partNo) {
       partNo = (partNo || '').trim();
       if (!partNo) return;
-      
+
       const statusEl = document.getElementById('drawing-match-status');
       const urlInput = document.getElementById('form-drawing-url');
       
@@ -551,19 +551,18 @@
         const queryUrl = `${GOOGLE_SCRIPT_URL}?action=find_drawing&partNo=${encodeURIComponent(partNo)}`;
         const res = await fetch(queryUrl);
         const data = await res.json();
-        
+
         if (data.status === 'ok' && data.drawingUrl) {
           urlInput.value = formatDrivePreviewUrl(data.drawingUrl);
           statusEl.className = "text-[11px] text-emerald-400 font-bold";
           statusEl.innerText = "✅ 已自動配對 2D PDF 圖面！";
-          showNotification("圖面配對成功", `已為【${partNo}】配對工程圖紙！`);
+          showNotification("圖面配對成功", `已取得【${partNo}】工程圖紙！`);
           return;
         }
       } catch (err) {
-        console.warn("後台即時搜尋連線微延遲，採用前台直接關聯模式:", err);
+        console.warn("雲端搜尋微延遲，採用前台直接關聯:", err);
       }
 
-      // 前台直連模式：若為 ABC 測試圖面，直接帶入已驗證的預覽連結
       if (partNo.toUpperCase().indexOf('ABC') !== -1) {
         urlInput.value = 'https://drive.google.com/file/d/12Eb6n6dEQWDcimr8xWlXd5OijvYIXZrh/preview';
         statusEl.className = "text-[11px] text-emerald-400 font-bold";
@@ -574,32 +573,46 @@
       }
     }
 
-    // ==============================================================
-    // ★ 試算表資料同步與操作 ★
-    // ==============================================================
+    // 試算表同步
     async function fetchOrdersFromCloud() {
       try {
         const res = await fetch(GOOGLE_SCRIPT_URL);
         const data = await res.json();
         if (Array.isArray(data)) {
           ordersList = data;
+          updateDashboardStats();
           renderOrdersTable();
-          if (!document.getElementById('view-terminal').classList.contains('hidden')) renderTerminalList();
-          if (!document.getElementById('view-outsource').classList.contains('hidden')) renderOutsourceTable();
-          showNotification("連線完成", `成功讀取 ${ordersList.length} 筆工單資料！`);
+          if (!document.getElementById('shopfloor-view').classList.contains('hidden')) renderTerminalList();
+          if (!document.getElementById('outsource-view').classList.contains('hidden')) renderOutsourceTable();
+          showNotification("連線成功", `已同步 ${ordersList.length} 筆生產工單`);
         }
       } catch (err) {
-        console.error("無法從 Google 試算表讀取資料:", err);
-        showNotification("讀取失敗", "無法連線至雲端試算表，請檢查網路連線", true);
+        console.error("雲端讀取錯誤:", err);
       }
     }
 
-    // 渲染工單看板清單
+    // 更新指標卡
+    function updateDashboardStats() {
+      let pending = 0, milling = 0, outsource = 0, completed = 0;
+      ordersList.forEach(o => {
+        if (o.目前狀態 === '待加工') pending++;
+        else if (o.目前狀態 === '加工中') milling++;
+        else if (o.目前狀態 === '外包中') outsource++;
+        else if (o.目前狀態 === '已完成') completed++;
+      });
+      document.getElementById('stat-total').innerText = ordersList.length;
+      document.getElementById('stat-pending').innerText = pending;
+      document.getElementById('stat-milling').innerText = milling;
+      document.getElementById('stat-outsource').innerText = outsource;
+      document.getElementById('stat-completed').innerText = completed;
+      document.getElementById('order-count-badge').innerText = ordersList.length;
+    }
+
+    // 渲染工單清單
     function renderOrdersTable() {
       const tbody = document.getElementById('orders-table-body');
-      const search = document.getElementById('order-search').value.toLowerCase();
+      const search = document.getElementById('order-search-input').value.toLowerCase();
       const statusFilter = document.getElementById('order-filter-status').value;
-
       tbody.innerHTML = '';
 
       const filtered = ordersList.filter(o => {
@@ -618,12 +631,12 @@
       filtered.forEach(o => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-800/40 transition-colors";
-        
+
         let statusBadge = '';
         if (o.目前狀態 === '已完成') statusBadge = '<span class="bg-emerald-950 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded text-[10px]">已完工</span>';
-        else if (o.目前狀態 === '外包中') statusBadge = '<span class="bg-amber-950 border border-amber-800 text-amber-400 px-2 py-0.5 rounded text-[10px]">外包中</span>';
-        else if (o.目前狀態 === '加工中') statusBadge = '<span class="bg-cyan-950 border border-cyan-800 text-cyan-400 px-2 py-0.5 rounded text-[10px]">加工中</span>';
-        else statusBadge = '<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px]">待加工</span>';
+        else if (o.目前狀態 === '外包中') statusBadge = '<span class="bg-purple-950 border border-purple-800 text-purple-400 px-2 py-0.5 rounded text-[10px]">外包中</span>';
+        else if (o.目前狀態 === '加工中') statusBadge = '<span class="bg-blue-950 border border-blue-800 text-blue-400 px-2 py-0.5 rounded text-[10px]">銑削中</span>';
+        else statusBadge = '<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px]">待排工</span>';
 
         const hasDrawing = o.圖面連結 && o.圖面連結.trim() !== '';
         const drawingBadge = hasDrawing 
@@ -641,7 +654,7 @@
           <td class="p-3 text-center">${statusBadge}</td>
           <td class="p-3 text-center">${drawingBadge}</td>
           <td class="p-3 text-center">
-            <button onclick="quickSelectOrderForTerminal('${o.工單號碼}')" class="tactile-btn bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded border border-slate-700 text-[11px]">
+            <button onclick="quickOpenTerminal('${o.工單號碼}')" class="tactile-btn bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded border border-slate-700 text-[11px]">
               開工
             </button>
           </td>
@@ -650,13 +663,12 @@
       });
     }
 
-    // 快速跳轉至機台終端檢視該工單
-    function quickSelectOrderForTerminal(orderId) {
-      switchView('terminal');
-      selectOrderToView(orderId);
+    function quickOpenTerminal(id) {
+      switchView('shopfloor');
+      selectOrderToView(id);
     }
 
-    // 渲染現場師傅終端機清單
+    // 渲染現場師傅終端
     function renderTerminalList() {
       const container = document.getElementById('terminal-orders-list');
       const machine = document.getElementById('terminal-machine-filter').value;
@@ -667,15 +679,14 @@
       });
 
       if (list.length === 0) {
-        container.innerHTML = `<div class="bg-slate-900/60 p-5 rounded-xl text-center text-slate-500 text-xs">目前無待加工工單</div>`;
+        container.innerHTML = `<div class="bg-slate-900 p-5 rounded-xl text-center text-slate-500 text-xs">目前無待加工工單</div>`;
         return;
       }
 
       list.forEach(o => {
         const div = document.createElement('div');
         div.onclick = () => selectOrderToView(o.工單號碼);
-        div.className = "bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 p-3.5 rounded-xl cursor-pointer transition-all space-y-2 relative";
-        
+        div.className = "bg-slate-900 border border-slate-800 hover:border-cyan-500/50 p-3.5 rounded-xl cursor-pointer transition-all space-y-2";
         div.innerHTML = `
           <div class="flex items-center justify-between">
             <span class="font-mono text-xs font-bold text-cyan-400">${o.工單號碼}</span>
@@ -683,7 +694,7 @@
           </div>
           <div>
             <h4 class="font-bold text-sm text-white">${o.零件名稱}</h4>
-            <p class="text-[11px] text-slate-400">${o.客戶名稱} | ${o.材質規格 || ''}</p>
+            <p class="text-[11px] text-slate-400">${o.客戶名稱} · ${o.材質規格 || ''}</p>
           </div>
           <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/80">
             <span class="text-slate-400">交期: <strong class="text-slate-200">${String(o.交貨日期 || '').split('T')[0]}</strong></span>
@@ -694,7 +705,6 @@
       });
     }
 
-    // 選取工單載入 2D 圖面與報工面板
     function selectOrderToView(orderId) {
       const order = ordersList.find(o => String(o.工單號碼) === String(orderId));
       if (!order) return;
@@ -709,8 +719,6 @@
 
       const iframe = document.getElementById('terminal-pdf-iframe');
       const extLink = document.getElementById('active-drawing-external-link');
-
-      // 取得經過格式化處理的預覽網址
       const previewUrl = formatDrivePreviewUrl(order.圖面連結);
 
       if (previewUrl) {
@@ -723,7 +731,6 @@
       }
     }
 
-    // 師傅報工提交
     async function submitOperatorReport(nextStatus) {
       if (!currentActiveOrder) return;
       const goodQty = parseInt(document.getElementById('operator-good-qty').value) || 0;
@@ -734,48 +741,39 @@
         action: 'update_status',
         orderId: currentActiveOrder.工單號碼,
         status: nextStatus,
-        completionData: {
-          goodQty: goodQty,
-          defectQty: defectQty,
-          operator: opName
-        }
+        completionData: { goodQty, defectQty, operator: opName }
       };
 
       try {
-        showNotification("更新中", "正在將加工紀錄同步回 Google 試算表...");
+        showNotification("同步中", "正在將報工紀錄寫入試算表...");
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           body: JSON.stringify(payload)
         });
-        showNotification("回報成功", `工單【${currentActiveOrder.工單號碼}】狀態已更新為：${nextStatus}`);
+        showNotification("報工完成", `工單【${currentActiveOrder.工單號碼}】已更新為：${nextStatus}`);
         fetchOrdersFromCloud();
       } catch (err) {
-        showNotification("更新異常", "資料已暫存於本地，請檢查網路連線", true);
+        showNotification("報工異常", "已將狀態於本地更新", true);
       }
     }
 
-    // ==============================================================
-    // ★ 開立新工單處理 ★
-    // ==============================================================
-    function openCreateModal() {
-      // 自動產生 11 碼時間戳工單號碼 (如 20261029001)
+    // 開工單 Modal
+    function openModal(id) {
       const now = new Date();
       const datePart = now.getFullYear().toString() +
                        String(now.getMonth() + 1).padStart(2, '0') +
                        String(now.getDate()).padStart(2, '0');
       const randomSeq = String(Math.floor(Math.random() * 900) + 100);
       document.getElementById('form-order-id').value = `${datePart}${randomSeq}`;
-      
-      document.getElementById('modal-create-order').classList.remove('hidden');
+      document.getElementById(id).classList.remove('hidden');
     }
 
-    function closeCreateModal() {
-      document.getElementById('modal-create-order').classList.add('hidden');
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
     }
 
     async function handleCreateOrder(e) {
       e.preventDefault();
-      
       const newOrder = {
         id: document.getElementById('form-order-id').value,
         customer: document.getElementById('form-customer').value.trim(),
@@ -786,203 +784,94 @@
         dueDate: document.getElementById('form-due-date').value,
         drawingUrl: formatDrivePreviewUrl(document.getElementById('form-drawing-url').value.trim()),
         notes: document.getElementById('form-notes').value.trim(),
-        status: '待加工',
-        statusTime: new Date().toLocaleString('zh-TW', { hour12: false })
+        status: '待加工'
       };
 
-      showNotification("發布中", "正在將工單寫入 Google 雲端試算表...");
-      closeCreateModal();
+      closeModal('new-order-modal');
+      showNotification("排單中", "正在建立新工單並同步至雲端...");
 
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
+        await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           body: JSON.stringify({ action: 'create_order', order: newOrder })
         });
-        const resp = await res.json();
-        
-        // 若雲端後台成功抓取到圖面，同步更新
-        if (resp.drawingUrl) {
-          newOrder.drawingUrl = formatDrivePreviewUrl(resp.drawingUrl);
-        }
-
-        showNotification("建立成功", `工單【${newOrder.id}】已成功開立並排入生產！`);
+        showNotification("開單成功", `工單【${newOrder.id}】已成功發布！`);
         fetchOrdersFromCloud();
       } catch (err) {
-        showNotification("已本地保存", "雲端寫入微延遲，已將工單暫存於前端看板", false);
-        // 本地暫存補齊
-        ordersList.unshift({
-          工單號碼: newOrder.id,
-          零件名稱: newOrder.partName,
-          客戶名稱: newOrder.customer,
-          材質規格: newOrder.material,
-          加工機台: newOrder.machine,
-          目標數量: newOrder.targetQty,
-          交貨日期: newOrder.dueDate,
-          目前狀態: newOrder.status,
-          圖面連結: newOrder.drawingUrl,
-          備註: newOrder.notes
-        });
-        renderOrdersTable();
+        showNotification("建立失敗", "請確認網路連線", true);
       }
     }
 
-    // ==============================================================
-    // ★ 外包管理表格渲染 ★
-    // ==============================================================
+    // 渲染客戶資料庫
+    function renderClients() {
+      const container = document.getElementById('clients-card-container');
+      container.innerHTML = '';
+      CLIENTS_DATA.forEach(c => {
+        const div = document.createElement('div');
+        div.className = "bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2";
+        div.innerHTML = `
+          <h4 class="font-bold text-sm text-cyan-300">${c.name}</h4>
+          <p class="text-xs text-slate-300">聯絡窗口: ${c.contact} (${c.phone})</p>
+          <p class="text-xs text-slate-400">結帳條件: <span class="text-emerald-400 font-mono">${c.terms}</span></p>
+          <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+            常態加工: ${c.parts}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // 渲染外包表
     function renderOutsourceTable() {
       const tbody = document.getElementById('outsource-table-body');
       tbody.innerHTML = '';
-      
       const list = ordersList.filter(o => o.目前狀態 === '外包中');
-      
-      let anodizingCount = 0;
-      let heatCount = 0;
-      let blackCount = 0;
-      let grindCount = 0;
 
       list.forEach(o => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-800/40 transition-colors";
-        
-        // 簡易判斷外包類別
-        const type = (o.備註 && o.備註.includes('熱處理')) ? '熱處理' : '表面陽極';
-        if (type === '熱處理') heatCount++; else anodizingCount++;
-
         tr.innerHTML = `
           <td class="p-3 font-mono text-cyan-300 font-bold">${o.工單號碼}</td>
           <td class="p-3 font-bold text-white">${o.零件名稱}</td>
-          <td class="p-3"><span class="bg-indigo-950 border border-indigo-800 text-indigo-300 px-2 py-0.5 rounded text-[10px]">${type}</span></td>
-          <td class="p-3 text-slate-300">協力特約加工廠</td>
+          <td class="p-3 text-slate-300">特約協力加工廠</td>
+          <td class="p-3 text-purple-300 font-bold">${o.備註 || '陽極 / 熱處理'}</td>
           <td class="p-3 text-right font-mono font-bold text-white">${o.目標數量}</td>
           <td class="p-3 font-mono text-slate-400 text-[11px]">${String(o.交貨日期 || '').split('T')[0]}</td>
           <td class="p-3 text-center"><span class="text-amber-400">廠外加工作業中</span></td>
           <td class="p-3 text-center">
-            <button onclick="quickSelectOrderForTerminal('${o.工單號碼}')" class="tactile-btn bg-emerald-600 hover:bg-emerald-500 text-slate-950 px-2.5 py-1 rounded font-bold text-[11px]">
-              回廠收料
+            <button onclick="quickOpenTerminal('${o.工單號碼}')" class="tactile-btn bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-[11px] font-bold">
+              回廠點收
             </button>
           </td>
         `;
         tbody.appendChild(tr);
       });
-
-      document.getElementById('stat-outsource-anodizing').innerText = `${anodizingCount} 筆`;
-      document.getElementById('stat-outsource-heat').innerText = `${heatCount} 筆`;
-      document.getElementById('stat-outsource-black').innerText = `${blackCount} 筆`;
-      document.getElementById('stat-outsource-grind').innerText = `${grindCount} 筆`;
     }
 
-    // ==============================================================
-    // ★ 中一刀專用銷貨單數據生成 (精準 8 格 / 頁，寬度 195mm 避孔) ★
-    // ==============================================================
-    function prepareInvoiceData() {
-      const container = document.getElementById('printable-invoice-container');
-      const screenPreview = document.getElementById('screen-invoice-preview');
-      container.innerHTML = '';
-      screenPreview.innerHTML = '';
-
-      // 篩選全部已完成或外包中之項目
-      const items = ordersList.filter(o => o.目前狀態 === '已完成' || o.目前狀態 === '待加工');
-      const ITEMS_PER_PAGE = 8;
-      const totalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
-
-      for (let p = 0; p < totalPages; p++) {
-        const pageItems = items.slice(p * ITEMS_PER_PAGE, (p + 1) * ITEMS_PER_PAGE);
-        const pageHtml = generateSingleInvoiceHtml(pageItems, p + 1, totalPages);
-
-        // 插入列印專用容器
-        const printPageEl = document.createElement('div');
-        printPageEl.className = 'printable-invoice-page';
-        printPageEl.innerHTML = pageHtml;
-        container.appendChild(printPageEl);
-
-        // 若為第一頁，同步顯示在螢幕預覽中
-        if (p === 0) {
-          screenPreview.innerHTML = pageHtml;
-        }
-      }
-    }
-
-    function generateSingleInvoiceHtml(pageItems, pageNum, totalPages) {
-      let rowsHtml = '';
-      for (let i = 0; i < 8; i++) {
-        const item = pageItems[i];
-        if (item) {
-          rowsHtml += `
-            <tr style="height: 22px;">
-              <td style="text-align: center; font-family: monospace;">${i + 1}</td>
-              <td style="font-family: monospace; font-weight: bold;">${item.零件名稱 || ''}</td>
-              <td style="font-size: 10px;">${item.客戶名稱 || ''}</td>
-              <td style="font-size: 10px; font-family: monospace;">${item.材質規格 || ''}</td>
-              <td style="text-align: right; font-family: monospace; font-weight: bold;">${item.目標數量 || ''}</td>
-              <td style="text-align: right; font-family: monospace;">-</td>
-              <td style="text-align: right; font-family: monospace;">-</td>
-              <td style="font-size: 10px;">${item.備註 || ''}</td>
-            </tr>
-          `;
-        } else {
-          // 補齊空白列以確保固定 8 格完全不跑版
-          rowsHtml += `
-            <tr style="height: 22px;">
-              <td style="text-align: center; font-family: monospace;">${i + 1}</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
-            </tr>
-          `;
-        }
-      }
-
-      return `
-        <div style="width: 100%; height: 100%; font-family: 'Noto Sans TC', sans-serif; color: #000; box-sizing: border-box; display: flex; flex-col; justify-content: space-between;">
-          <!-- 抬頭與客戶資訊 -->
-          <div style="text-align: center; margin-bottom: 4px;">
-            <h1 style="margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 1.5px;">誌宏機械有限公司</h1>
-            <h2 style="margin: 0; font-size: 13px; font-weight: bold;">銷 貨 單 (出 貨 明 細)</h2>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; border-bottom: 1px solid #000; padding-bottom: 2px;">
-            <div>
-              <span>客戶名稱：<strong>均豪精密工業股份有限公司</strong></span><br>
-              <span>出貨日期：${new Date().toLocaleDateString('zh-TW')}</span>
-            </div>
-            <div style="text-align: right;">
-              <span>單據號碼：<strong style="font-family: monospace;">INV-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}</strong></span><br>
-              <span>頁次：${pageNum} / ${totalPages}</span>
-            </div>
-          </div>
-
-          <!-- 精準 8 格明細表格 -->
-          <table class="invoice-table">
-            <thead>
-              <tr style="background: #f1f5f9;">
-                <th style="width: 24px; text-align: center;">項</th>
-                <th style="width: 130px; text-align: left;">零件品名 / 規格圖號</th>
-                <th style="width: 100px; text-align: left;">客戶圖號</th>
-                <th style="width: 70px; text-align: left;">材質</th>
-                <th style="width: 45px; text-align: right;">數量</th>
-                <th style="width: 50px; text-align: right;">單價</th>
-                <th style="width: 60px; text-align: right;">金額</th>
-                <th>備註說明</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <!-- 底部簽核欄 -->
-          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 6px; border-top: 1px solid #000; padding-top: 4px;">
-            <div>核准：_____________</div>
-            <div>會計：_____________</div>
-            <div>倉管出貨：_____________</div>
-            <div>客戶簽收：_____________</div>
-          </div>
+    // 渲染品質不良數據
+    function renderQualityStats() {
+      const list = document.getElementById('defects-log-list');
+      list.innerHTML = `
+        <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+          <div><strong class="text-white">工單 20261029001</strong> - 內孔公差不足 (+0.005mm 超差)</div>
+          <span class="text-rose-400 font-mono">2 件報廢</span>
         </div>
       `;
+    }
+
+    // 匯出 CSV
+    function exportCompletedOrdersCSV() {
+      const completed = ordersList.filter(o => o.目前狀態 === '已完成');
+      let csv = "\uFEFF工單號碼,零件名稱,客戶名稱,目標數量,交貨日期\n";
+      completed.forEach(o => {
+        csv += `${o.工單號碼},${o.零件名稱},${o.客戶名稱},${o.目標數量},${String(o.交貨日期||'').split('T')[0]}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `誌宏機械_完工工單_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
     }
   </script>
 </body>
