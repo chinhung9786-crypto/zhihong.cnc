@@ -28,7 +28,9 @@
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-    /* 中一刀專用列印樣式 (寬度 195mm 內縮、每頁 139.7mm 強制斷頁) */
+    /* ==============================================================
+       ★ 中一刀微調版 CSS (top: 6.5mm 下移、195mm 避孔、8 格高度優化) ★
+    ============================================================== */
     @media print {
       @page {
         size: 215.9mm 139.7mm landscape;
@@ -60,9 +62,9 @@
         page-break-after: always !important;
         break-after: page !important;
         width: 195mm !important;
-        height: 132mm !important;
+        height: 128mm !important;
         margin-left: 4mm !important;
-        margin-top: 3.5mm !important;
+        margin-top: 6.5mm !important; /* 版面微調下移，避開撕紙線 */
         padding: 0 !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
@@ -75,7 +77,7 @@
       }
     }
     .invoice-table { border-collapse: collapse; width: 100%; border: 1.2px solid #000; }
-    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 2.5px 5px; }
+    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 1.5px 4px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-20 md:pb-6">
@@ -83,10 +85,12 @@
   <script>
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_vvpQgAj_wyRnE7yLlpwmBqVIP9v8GLLA9APUnu88svA6eLnCLVoEK8r4Jp6G-i-U/exec';
     const DEFAULT_SYSTEM_PASSWORD = 'zh2026';
+    
+    // 誌宏機械 LOGO 向量圖形標誌
     const LOGO_SVG_HTML = '<svg viewBox="0 0 500 500" class="w-full h-full" xmlns="http://www.w3.org/2000/svg"><g transform="translate(40, 20)"><path d="M 120 70 C 170 30, 240 70, 210 130 C 180 170, 130 140, 120 70 Z" fill="#78B833"/><path d="M 230 65 C 290 85, 290 160, 230 180 C 180 190, 180 120, 230 65 Z" fill="#0099E5"/><path d="M 310 110 C 350 160, 310 230, 250 210 C 200 190, 240 140, 310 110 Z" fill="#78B833"/><path d="M 330 200 C 350 260, 280 290, 240 240 C 210 200, 270 170, 330 200 Z" fill="#0099E5"/><path d="M 260 280 C 240 330, 170 320, 170 260 C 170 200, 230 210, 260 280 Z" fill="#0099E5"/><path d="M 170 290 C 120 310, 100 240, 150 200 C 190 180, 200 240, 170 290 Z" fill="#0099E5"/><path d="M 110 240 C 50 230, 70 160, 130 160 C 180 170, 160 230, 110 240 Z" fill="#78B833"/><path d="M 30 180 C 10 110, 80 80, 140 110 C 180 140, 110 200, 30 180 Z" fill="#0099E5"/></g></svg>';
   </script>
 
-  <!-- 辦公室權限密碼解鎖彈窗 (隱碼式輸入) -->
+  <!-- 辦公室權限密碼解鎖彈窗 -->
   <div id="auth-lock-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border-2 border-cyan-500/80 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
       <div class="w-16 h-16 bg-cyan-950 border border-cyan-500 text-cyan-400 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-lg shadow-cyan-500/20">
@@ -127,11 +131,11 @@
               <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 連線中...
             </span>
           </div>
-          <p class="text-[11px] text-slate-400">CNC 精密加工 · 報價記憶與銷貨單管理系統</p>
+          <p class="text-[11px] text-slate-400">CNC 精密加工 · 報價記憶、2D PDF 圖庫與銷貨系統</p>
         </div>
       </div>
 
-      <!-- 切換頁籤 (手機預設直接進師傅終端) -->
+      <!-- 切換頁籤 -->
       <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
         <button id="view-btn-shopfloor" onclick="switchView('shopfloor')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan-600 text-white shadow-md whitespace-nowrap">
           <i class="ph-bold ph-wrench text-sm sm:text-base"></i>
@@ -179,7 +183,7 @@
 
   <!-- 主工作區 -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 md:p-6">
-    <!-- VIEW 1: 現場師傅終端 (免密碼) -->
+    <!-- VIEW 1: 現場師傅終端 (免密碼，含 PDF 2D 圖面即時檢視) -->
     <section id="shopfloor-view" class="space-y-4">
       <div class="bg-slate-900 border-2 border-amber-500/60 p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
         <div class="flex items-center gap-3">
@@ -188,7 +192,7 @@
           </div>
           <div>
             <h2 class="text-base sm:text-lg font-black text-white">現場加工報工與 2D 圖面查閱</h2>
-            <p class="text-xs text-slate-400">現場師傅專屬通道 · 點選工單直接報工</p>
+            <p class="text-xs text-slate-400">現場師傅專屬通道 · 點選工單直接報工與查看圖面</p>
           </div>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -252,7 +256,7 @@
       <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border-2 border-emerald-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
           <h2 class="text-lg sm:text-xl font-black text-white">中一刀三聯銷貨單管理 (替代 QBoss)</h2>
-          <p class="text-xs text-slate-400">圖號自動帶入單價、每 6 筆自動切頁連續輸出、固定 6 行高度與防撞孔設計。</p>
+          <p class="text-xs text-slate-400">圖號自動帶入單價、版面微調下移、客戶框加大、8 格品名明細自動切頁。</p>
         </div>
         <button onclick="openCreateInvoiceModal()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl tactile-btn flex items-center gap-2 shadow-lg shadow-emerald-600/30">
           <i class="ph-bold ph-plus-circle text-base"></i> 手動開立銷貨單
@@ -278,7 +282,7 @@
       </div>
     </section>
 
-    <!-- VIEW 4: 零件價格與交期主檔庫 (雙軌報價庫) -->
+    <!-- VIEW 4: 零件價格與交期資料庫 (雙軌報價庫) -->
     <section id="prices-view" class="hidden space-y-5">
       <div class="bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border-2 border-amber-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
         <div>
@@ -367,7 +371,6 @@
         </div>
       </div>
 
-      <!-- 四大分類外包追蹤篩選 -->
       <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
         <button onclick="filterOutsourceBoard('ALL')" id="outsource-tab-ALL" class="px-3.5 py-2 rounded-xl font-bold bg-slate-800 text-purple-300 border border-purple-700">全部外包件</button>
         <button onclick="filterOutsourceBoard('表面處理')" id="outsource-tab-表面處理" class="px-3.5 py-2 rounded-xl font-bold text-slate-400 hover:text-white">表面處理</button>
@@ -397,12 +400,73 @@
     </section>
   </main>
 
-  <!-- 中一刀三聯銷貨單列印容器 (動態支援 LOGO、品項自動分頁連打) -->
+  <!-- 中一刀三聯銷貨單列印容器 (動態支援 8 格、客戶加大、備註微縮) -->
   <div id="printable-invoice-container" class="hidden"></div>
 
   <!-- ==============================================================
        MODALS 彈窗區
   ============================================================== -->
+
+  <!-- 建立新工單彈窗 (支援貼上 Google Drive PDF/圖檔連結) -->
+  <div id="new-order-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="font-bold text-white text-base">建立新工單與圖面發行</h2>
+          <p class="text-xs text-slate-400">支援設定加工要求與貼入 2D PDF / 雲端圖面連結</p>
+        </div>
+        <button onclick="closeModal('new-order-modal')" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
+      </div>
+      <form id="new-order-form" onsubmit="handleCreateOrder(event)" class="space-y-3 text-xs sm:text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-slate-400 mb-1">工單號碼 / 製合號 *</label><input type="text" id="form-order-no" required placeholder="例：ZH-202610-01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono outline-none focus:border-cyan-500"></div>
+          <div><label class="block text-slate-400 mb-1">零件名稱 / 圖名 *</label><input type="text" id="form-part-name" required placeholder="例：精密定位閥座" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500"></div>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">客戶名稱/代號 *</label>
+          <select id="form-customer-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-bold outline-none"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">材質規格 *</label>
+            <select id="form-material" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">指定預計加工機台</label>
+            <select id="form-machine" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-bold outline-none">
+              <option value="No1 立式中心加工機">No1 立式中心加工機</option>
+              <option value="No2 立式中心加工機">No2 立式中心加工機</option>
+              <option value="No3 立式中心加工機">No3 立式中心加工機</option>
+              <option value="No4 立式中心加工機">No4 立式中心加工機</option>
+              <option value="No5 立式中心加工機">No5 立式中心加工機</option>
+              <option value="No6 立式中心加工機">No6 立式中心加工機</option>
+              <option value="No7 立式中心加工機">No7 立式中心加工機</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-slate-400 mb-1">生產目標數量 (PCS) *</label><input type="number" id="form-target-qty" required value="10" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono"></div>
+          <div><label class="block text-slate-400 mb-1">交貨日期</label><input type="date" id="form-due-date" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
+        </div>
+
+        <!-- ★ PDF 工程圖面連結欄位 ★ -->
+        <div>
+          <label class="block text-cyan-400 font-bold mb-1">工程圖面連結 (Google Drive 雲端 PDF / 圖片分享網址)</label>
+          <input type="url" id="form-drawing-url" placeholder="請貼上 Google 雲端硬碟 PDF 共用連結 (例如: https://drive.google.com/...)" class="w-full bg-slate-950 border border-cyan-500/60 rounded-xl px-3 py-2 text-white text-xs outline-none">
+          <p class="text-[11px] text-slate-500 mt-0.5">※ 現場師傅在手機或平板點選此工單時，將可直接全螢幕放大查看 2D PDF 尺寸標註</p>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">加工叮嚀 / 關鍵公差要求</label>
+          <textarea id="form-notes" rows="2" placeholder="例：外徑 H7 公差，完成後需送硬陽處理膜厚 25μm。" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-cyan-500"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('new-order-modal')" class="px-4 py-2 text-slate-400">取消</button>
+          <button type="submit" id="btn-submit-order" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-2.5 rounded-xl tactile-btn shadow-lg shadow-cyan-600/30">發布工單</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- 手動預先建檔零件單價彈窗 -->
   <div id="add-price-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
@@ -451,13 +515,13 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <h3 class="text-white font-bold text-base flex items-center gap-2">
           <i class="ph-bold ph-tag text-purple-400"></i>
-          自建外包加工細項工種 (四大分類)
+          自建外包加工細項工種 (四大主分類)
         </h3>
         <button onclick="closeModal('manage-subtags-modal')" class="text-slate-400"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
 
       <div class="space-y-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-        <div class="text-xs text-purple-300 font-bold">＋ 新增細項工種至四大主類別</div>
+        <div class="text-xs text-purple-300 font-bold">＋ 新增細項工種至指定主類別</div>
         <div class="grid grid-cols-2 gap-2">
           <select id="new-subtag-main-cat" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs outline-none">
             <option value="表面處理">表面處理</option>
@@ -465,7 +529,7 @@
             <option value="機械協力">機械協力</option>
             <option value="板金/焊接/雷射">板金 / 焊接 / 雷射</option>
           </select>
-          <input type="text" id="new-subtag-name" placeholder="輸入細項名稱 (例: 染黑/鐵氟龍)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs outline-none">
+          <input type="text" id="new-subtag-name" placeholder="輸入工種名稱 (例: 染黑/鐵氟龍)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs outline-none">
         </div>
         <button type="button" onclick="handleAddCustomSubtag()" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow">確認新增至該分類</button>
       </div>
@@ -560,7 +624,7 @@
     </div>
   </div>
 
-  <!-- 開立銷貨單彈窗 (支援圖號感應帶入單價與多筆自動分頁) -->
+  <!-- 開立銷貨單彈窗 -->
   <div id="invoice-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border-2 border-emerald-600 w-full max-w-2xl rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
@@ -569,7 +633,7 @@
             <i class="ph-bold ph-receipt text-emerald-400"></i>
             開立中一刀三聯銷貨單
           </h3>
-          <p class="text-[11px] text-slate-400">輸入圖號即自動帶入歷史/約定單價；每 6 筆自動切頁連續輸出[cite: 4]。</p>
+          <p class="text-[11px] text-slate-400">輸入圖號即自動帶入約定單價；每 8 筆自動切頁連續輸出。</p>
         </div>
         <button onclick="closeModal('invoice-modal')" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
@@ -602,7 +666,7 @@
         <datalist id="drawings-datalist"></datalist>
         <div class="border-t border-slate-800 pt-3 space-y-2">
           <div class="flex justify-between items-center">
-            <label class="text-emerald-400 font-bold text-xs">品名規格清單 (輸入圖號自動感應帶入單價，超過 6 筆自動切頁連打)</label>
+            <label class="text-emerald-400 font-bold text-xs">品名規格清單 (輸入圖號自動感應帶入單價，滿 8 筆自動切頁連打)</label>
             <button type="button" onclick="addInvoiceItemRow()" class="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold flex items-center gap-1">
               <i class="ph-bold ph-plus"></i> ＋ 新增品項
             </button>
@@ -628,56 +692,6 @@
             <i class="ph-bold ph-printer text-base"></i>
             <span>儲存並列印中一刀銷貨單</span>
           </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 建立新工單彈窗 -->
-  <div id="new-order-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h2 class="font-bold text-white text-base">建立新工單與圖面發行</h2>
-        <button onclick="closeModal('new-order-modal')" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
-      </div>
-      <form id="new-order-form" onsubmit="handleCreateOrder(event)" class="space-y-3 text-xs sm:text-sm">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-slate-400 mb-1">工單號碼 / 製合號 *</label><input type="text" id="form-order-no" required placeholder="例：ZH-202610-01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono outline-none focus:border-cyan-500"></div>
-          <div><label class="block text-slate-400 mb-1">零件名稱 / 圖名 *</label><input type="text" id="form-part-name" required placeholder="例：精密定位閥座" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500"></div>
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">客戶名稱/代號 *</label>
-          <select id="form-customer-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-bold outline-none"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-slate-400 mb-1">材質規格 *</label>
-            <select id="form-material" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none"></select>
-          </div>
-          <div>
-            <label class="block text-slate-400 mb-1">指定預計加工機台</label>
-            <select id="form-machine" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-bold outline-none">
-              <option value="No1 立式中心加工機">No1 立式中心加工機</option>
-              <option value="No2 立式中心加工機">No2 立式中心加工機</option>
-              <option value="No3 立式中心加工機">No3 立式中心加工機</option>
-              <option value="No4 立式中心加工機">No4 立式中心加工機</option>
-              <option value="No5 立式中心加工機">No5 立式中心加工機</option>
-              <option value="No6 立式中心加工機">No6 立式中心加工機</option>
-              <option value="No7 立式中心加工機">No7 立式中心加工機</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-slate-400 mb-1">生產目標數量 (PCS) *</label><input type="number" id="form-target-qty" required value="10" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono"></div>
-          <div><label class="block text-slate-400 mb-1">交貨日期</label><input type="date" id="form-due-date" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"></div>
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">加工叮嚀 / 關鍵公差要求</label>
-          <textarea id="form-notes" rows="2" placeholder="例：外徑 H7 公差，完成後需送硬陽處理膜厚 25μm。" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-cyan-500"></textarea>
-        </div>
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-          <button type="button" onclick="closeModal('new-order-modal')" class="px-4 py-2 text-slate-400">取消</button>
-          <button type="submit" id="btn-submit-order" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-2.5 rounded-xl tactile-btn shadow-lg shadow-cyan-600/30">發布工單</button>
         </div>
       </form>
     </div>
@@ -799,40 +813,39 @@
   </div>
 
   <!-- ==============================================================
-       核心 JavaScript 邏輯 (圖號帶入單價、兩層分類與自動分頁)
+       核心 JavaScript 邏輯 (PDF 支援、8格打單、兩層分類與自動帶入)
   ============================================================== -->
   <script>
     let orders = [];
-    let invoices = JSON.parse(localStorage.getItem('zh_cnc_invoices_v23')) || [];
-    let salesPersons = JSON.parse(localStorage.getItem('zh_cnc_sales_list_v23')) || ["徐佩萱", "陳宏嘉"];
+    let invoices = JSON.parse(localStorage.getItem('zh_cnc_invoices_v24')) || [];
+    let salesPersons = JSON.parse(localStorage.getItem('zh_cnc_sales_list_v24')) || ["徐佩萱", "陳宏嘉"];
     let currentFilter = 'ALL';
     let currentClientFilter = 'ALL';
     let currentOutsourceFilter = 'ALL';
     let currentWorkerOrderId = null;
     let pendingAuthTargetView = null;
 
-    // ★ 零件價格與交期資料庫 (雙軌主檔) ★
-    let priceDatabase = JSON.parse(localStorage.getItem('zh_cnc_price_db_v23')) || [
+    // 零件價格與交期主檔庫 (雙軌自動記憶)
+    let priceDatabase = JSON.parse(localStorage.getItem('zh_cnc_price_db_v24')) || [
       { client: "均豪精密工業股份有限公司", item: "6T291A1505", price: 180, lastDeliveryDate: "2026-10-25", notes: "定位閥座/AL6061硬陽" },
       { client: "均豪精密工業股份有限公司", item: "ZH-FIX-002", price: 350, lastDeliveryDate: "2026-10-20", notes: "S45C研磨治具" }
     ];
 
-    // ★ 四大主分類與自建細項工種庫 ★
-    let outsourceCategories = JSON.parse(localStorage.getItem('zh_cnc_outsource_cats_v23')) || {
+    // 四大主分類與自建細項工種庫
+    let outsourceCategories = JSON.parse(localStorage.getItem('zh_cnc_outsource_cats_v24')) || {
       "表面處理": ["本色陽極", "硬質陽極 (硬陽)", "黑色陽極", "化學鎳 (無電解鎳)", "染黑處置", "電解拋光"],
       "熱處理": ["真空淬火", "調質處置", "高週波硬化", "滲碳熱處理", "回火退火"],
       "機械協力": ["慢走絲線切割", "快走絲割外形", "放電加工 (EDM)", "平面精密研磨", "外圓精密研磨", "深孔槍鑽加工"],
       "板金/焊接/雷射": ["光纖雷射切割", "雷射切管", "氬焊加工", "CO2結構焊接", "CNC折床折彎"]
     };
 
-    // 協力廠商庫 (含主分類與細項工種標籤)
-    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v23')) || [
+    let vendors = JSON.parse(localStorage.getItem('zh_cnc_vendors_v24')) || [
       { name: "順捷精密陽極廠", mainCat: "表面處理", subtag: "硬質陽極 (硬陽)", contact: "林課長", phone: "03-361xxxx" },
       { name: "富貿真空熱處理", mainCat: "熱處理", subtag: "真空淬火", contact: "王廠長", phone: "03-375xxxx" },
       { name: "立興精密線切割", mainCat: "機械協力", subtag: "慢走絲線切割", contact: "陳師傅", phone: "03-368xxxx" }
     ];
 
-    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v23')) || [
+    let clients = JSON.parse(localStorage.getItem('zh_cnc_clients_v24')) || [
       {
         id: "C001",
         name: "均豪精密工業股份有限公司",
@@ -845,7 +858,7 @@
       }
     ];
 
-    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v23')) || [
+    let materials = JSON.parse(localStorage.getItem('zh_cnc_materials_v24')) || [
       { category: "碳鋼 / 合金鋼", name: "S45C (中碳鋼)" },
       { category: "碳鋼 / 合金鋼", name: "SS440 (中碳板)" },
       { category: "不鏽鋼系列", name: "SUS304 (耐蝕不鏽鋼)" },
@@ -975,7 +988,7 @@
     async function fetchCloudData(showToast) {
       const badge = document.getElementById('cloud-badge');
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('AKfycbx') === -1) {
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v23')) || [];
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v24')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -993,6 +1006,7 @@
             machine: row["加工機台"] || row["machine"] || "",
             targetQty: parseInt(row["目標數量"] || row["target_qty"]) || 1,
             dueDate: row["交貨日期"] || row["due_date"] || "",
+            drawingUrl: row["圖面連結"] || row["drawing_url"] || "",
             status: row["目前狀態"] || row["status"] || "待加工",
             statusTime: row["更新時間"] || row["status_time"] || "",
             notes: row["備註"] || "",
@@ -1010,7 +1024,7 @@
       } catch (e) {
         badge.className = "text-[10px] bg-amber-950 border border-amber-800 text-amber-300 px-1.5 py-0.2 rounded font-mono font-bold flex items-center gap-1";
         badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> 本地離線暫存';
-        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v23')) || [];
+        orders = JSON.parse(localStorage.getItem('zh_cnc_local_orders_v24')) || [];
         renderOfficeBoard();
         populateWorkerOrderSelector();
         renderShopfloorView();
@@ -1058,7 +1072,7 @@
       } else {
         priceDatabase.unshift({ client: clientName, item: item, price: price, lastDeliveryDate: deliveryDate, notes: "銷貨自動記憶建檔" });
       }
-      localStorage.setItem('zh_cnc_price_db_v23', JSON.stringify(priceDatabase));
+      localStorage.setItem('zh_cnc_price_db_v24', JSON.stringify(priceDatabase));
       renderPricesView();
     }
 
@@ -1088,7 +1102,7 @@
       recordOrUpdatePrice(client, item, price, date);
       let p = priceDatabase.find(function(x) { return x.client === client && x.item === item; });
       if (p) p.notes = notes;
-      localStorage.setItem('zh_cnc_price_db_v23', JSON.stringify(priceDatabase));
+      localStorage.setItem('zh_cnc_price_db_v24', JSON.stringify(priceDatabase));
 
       closeModal('add-price-modal');
       renderPricesView();
@@ -1127,7 +1141,7 @@
     function deletePriceItem(idx) {
       if (confirm("確定要刪除這筆零件單價紀錄嗎？")) {
         priceDatabase.splice(idx, 1);
-        localStorage.setItem('zh_cnc_price_db_v23', JSON.stringify(priceDatabase));
+        localStorage.setItem('zh_cnc_price_db_v24', JSON.stringify(priceDatabase));
         renderPricesView();
       }
     }
@@ -1189,7 +1203,7 @@
       if (!outsourceCategories[mainCat]) outsourceCategories[mainCat] = [];
       if (outsourceCategories[mainCat].indexOf(name) === -1) {
         outsourceCategories[mainCat].push(name);
-        localStorage.setItem('zh_cnc_outsource_cats_v23', JSON.stringify(outsourceCategories));
+        localStorage.setItem('zh_cnc_outsource_cats_v24', JSON.stringify(outsourceCategories));
         document.getElementById('new-subtag-name').value = '';
         renderSubtagsList();
         populateSubtagSelector('vendor-subtag', document.getElementById('vendor-main-cat').value);
@@ -1220,7 +1234,7 @@
     function deleteSubtag(mainCat, idx) {
       if (outsourceCategories[mainCat]) {
         outsourceCategories[mainCat].splice(idx, 1);
-        localStorage.setItem('zh_cnc_outsource_cats_v23', JSON.stringify(outsourceCategories));
+        localStorage.setItem('zh_cnc_outsource_cats_v24', JSON.stringify(outsourceCategories));
         renderSubtagsList();
         populateSubtagSelector('vendor-subtag', document.getElementById('vendor-main-cat').value);
         populateSubtagSelector('outsource-subtag', document.getElementById('outsource-main-cat').value);
@@ -1228,7 +1242,7 @@
     }
 
     // ==============================================================
-    // ★ 銷貨單：多筆自動分頁與中一刀套印 ★
+    // ★ 銷貨單：8格明細、客戶欄加大、備註微縮與自動分頁 ★
     // ==============================================================
     function refreshSalesDatalist() {
       const dl = document.getElementById('sales-list');
@@ -1306,7 +1320,6 @@
       container.innerHTML = '';
       const qty = o.completionData ? (o.completionData.goodQty || o.targetQty) : o.targetQty;
       
-      // 自動比對價格
       let matchedPrice = 0;
       let p = priceDatabase.find(function(x) { return x.client === o.customer && (x.item === o.partName || x.item === o.id); });
       if (p) matchedPrice = p.price;
@@ -1359,6 +1372,7 @@
       document.getElementById('inv-calc-total').innerText = grandTotal.toLocaleString();
     }
 
+    // ★ 列印核心：8 格固定高度、版面下移、客戶框加大、備註微縮 ★
     function handlePrintInvoice(e) {
       e.preventDefault();
       const invoiceNo = document.getElementById('inv-form-no').value.trim();
@@ -1384,7 +1398,6 @@
           items.push({ name: name, qty: q, price: p, amount: amt });
           totalQty += q;
           subtotal += amt;
-          // ★ 自動記憶學習成交單價與交期 ★
           recordOrUpdatePrice(clientName, name, p, invoiceDate);
         }
       }
@@ -1399,7 +1412,7 @@
 
       if (!salesPersons.includes(salesName)) {
         salesPersons.push(salesName);
-        localStorage.setItem('zh_cnc_sales_list_v23', JSON.stringify(salesPersons));
+        localStorage.setItem('zh_cnc_sales_list_v24', JSON.stringify(salesPersons));
         refreshSalesDatalist();
       }
 
@@ -1407,7 +1420,8 @@
       const dParts = invoiceDate.split('-');
       const formattedDate = dParts[0] + ' 年 ' + dParts[1] + ' 月 ' + dParts[2] + ' 日';
 
-      const pageSize = 6;
+      // ★ 8 格分頁演算法 ★
+      const pageSize = 8;
       const totalPages = Math.ceil(items.length / pageSize);
       const printContainer = document.getElementById('printable-invoice-container');
       printContainer.innerHTML = '';
@@ -1419,7 +1433,7 @@
         let tableRowsHtml = '';
         pageItems.forEach(function(item) {
           tableRowsHtml += 
-            '<tr style="height: 7.2mm;">' +
+            '<tr style="height: 5.6mm;">' +
               '<td class="font-bold">' + item.name + '</td>' +
               '<td class="text-center font-mono font-bold">' + item.qty + '</td>' +
               '<td class="text-right font-mono">' + item.price.toLocaleString() + '</td>' +
@@ -1427,10 +1441,11 @@
             '</tr>';
         });
 
+        // 補滿 8 格高度
         const emptyRows = pageSize - pageItems.length;
         for (let er = 0; er < emptyRows; er++) {
           tableRowsHtml += 
-            '<tr style="height: 7.2mm;">' +
+            '<tr style="height: 5.6mm;">' +
               '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
             '</tr>';
         }
@@ -1438,6 +1453,7 @@
         const pageDiv = document.createElement('div');
         pageDiv.className = 'printable-invoice-page font-sans text-black bg-white select-none';
         pageDiv.innerHTML = 
+          '<!-- 頂部資訊 (含 LOGO 打印) -->' +
           '<div class="flex justify-between items-start border-b border-black pb-1 mb-1">' +
             '<div class="flex items-center gap-2">' +
               '<div class="w-10 h-10 shrink-0">' + LOGO_SVG_HTML + '</div>' +
@@ -1458,19 +1474,23 @@
               '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
             '</div>' +
           '</div>' +
-          '<div class="grid grid-cols-2 text-[10.5px] leading-tight border border-black p-1.5 mb-1 bg-white">' +
-            '<div>' +
-              '<div>客戶名稱：<strong class="text-[11px]">' + clientName + '</strong></div>' +
+
+          '<!-- 客戶資訊 (微調加大，更加舒展) -->' +
+          '<div class="grid grid-cols-2 text-[11px] leading-tight border border-black p-2 mb-1 bg-white">' +
+            '<div class="space-y-0.5">' +
+              '<div>客戶名稱：<strong class="text-xs">' + clientName + '</strong></div>' +
               '<div>統一編號：<span class="font-mono">' + (c.taxId || '') + '</span></div>' +
               '<div>送貨地址：<span>' + (c.address || '') + '</span></div>' +
             '</div>' +
-            '<div class="pl-2">' +
+            '<div class="pl-2 space-y-0.5">' +
               '<div>聯 絡 人：<span>' + (c.contact || '') + '</span></div>' +
               '<div>聯絡電話：<span class="font-mono">' + (c.phone || '') + '</span></div>' +
               '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
             '</div>' +
           '</div>' +
-          '<table class="invoice-table text-[10.5px] mb-1">' +
+
+          '<!-- 8 格品名規格表格 -->' +
+          '<table class="invoice-table text-[10px] mb-1">' +
             '<thead>' +
               '<tr class="bg-gray-100 text-center font-bold">' +
                 '<th style="width: 45%;">品名規格 / 圖號</th>' +
@@ -1481,20 +1501,24 @@
             '</thead>' +
             '<tbody>' + tableRowsHtml + '</tbody>' +
           '</table>' +
-          '<div class="border border-black px-2 py-1 text-[11px] font-mono flex justify-between items-center mb-1">' +
+
+          '<!-- 總計小計欄 -->' +
+          '<div class="border border-black px-2 py-1 text-[10.5px] font-mono flex justify-between items-center mb-1">' +
             '<div>數量總計：<strong class="text-xs">' + (isLastPage ? totalQty : '(續下頁)') + '</strong> PCS</div>' +
             '<div>合 &nbsp; 計：<span>' + (isLastPage ? subtotal.toLocaleString() : '--') + '</span> 元</div>' +
             '<div>稅 &nbsp; 額：<span>' + (isLastPage ? tax.toLocaleString() : '--') + '</span> 元</div>' +
             '<div>總 &nbsp; 計：<strong class="text-sm font-bold">' + (isLastPage ? grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
           '</div>' +
-          '<div class="grid grid-cols-12 border border-black" style="height: 22mm;">' +
-            '<div class="col-span-7 p-1.5 border-r border-black flex flex-col justify-between text-[10.5px]">' +
-              '<div class="font-bold">備註：<span class="font-normal">' + notes + '</span></div>' +
-              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+
+          '<!-- 備註與客戶大簽章格 (高度微縮至 16mm) -->' +
+          '<div class="grid grid-cols-12 border border-black" style="height: 16mm;">' +
+            '<div class="col-span-7 p-1 border-r border-black flex flex-col justify-between text-[10px]">' +
+              '<div><strong>備註：</strong><span class="font-normal">' + notes + '</span></div>' +
+              '<div class="text-[8.5px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
             '</div>' +
-            '<div class="col-span-5 p-1.5 flex flex-col justify-between text-[10.5px]">' +
+            '<div class="col-span-5 p-1 flex flex-col justify-between text-[10px]">' +
               '<div class="font-bold">客戶簽章：</div>' +
-              '<div class="text-center text-[10px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
+              '<div class="text-center text-[9px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
             '</div>' +
           '</div>';
         printContainer.appendChild(pageDiv);
@@ -1502,7 +1526,7 @@
 
       const record = { invoiceNo: invoiceNo, invoiceDate: invoiceDate, clientName: clientName, salesName: salesName, items: items, totalQty: totalQty, subtotal: subtotal, tax: tax, grandTotal: grandTotal, notes: notes, totalPages: totalPages };
       invoices.unshift(record);
-      localStorage.setItem('zh_cnc_invoices_v23', JSON.stringify(invoices));
+      localStorage.setItem('zh_cnc_invoices_v24', JSON.stringify(invoices));
       renderInvoicesTable();
       closeModal('invoice-modal');
 
@@ -1546,7 +1570,7 @@
       const dParts = inv.invoiceDate.split('-');
       const formattedDate = dParts[0] + ' 年 ' + dParts[1] + ' 月 ' + dParts[2] + ' 日';
 
-      const pageSize = 6;
+      const pageSize = 8;
       const totalPages = Math.ceil(items.length / pageSize);
       const printContainer = document.getElementById('printable-invoice-container');
       printContainer.innerHTML = '';
@@ -1558,7 +1582,7 @@
         let tableRowsHtml = '';
         pageItems.forEach(function(item) {
           tableRowsHtml += 
-            '<tr style="height: 7.2mm;">' +
+            '<tr style="height: 5.6mm;">' +
               '<td class="font-bold">' + item.name + '</td>' +
               '<td class="text-center font-mono font-bold">' + item.qty + '</td>' +
               '<td class="text-right font-mono">' + item.price.toLocaleString() + '</td>' +
@@ -1569,7 +1593,7 @@
         const emptyRows = pageSize - pageItems.length;
         for (let er = 0; er < emptyRows; er++) {
           tableRowsHtml += 
-            '<tr style="height: 7.2mm;">' +
+            '<tr style="height: 5.6mm;">' +
               '<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>' +
             '</tr>';
         }
@@ -1597,19 +1621,19 @@
               '<div>銷貨日期：<span class="font-mono font-bold">' + formattedDate + '</span></div>' +
             '</div>' +
           '</div>' +
-          '<div class="grid grid-cols-2 text-[10.5px] leading-tight border border-black p-1.5 mb-1 bg-white">' +
-            '<div>' +
-              '<div>客戶名稱：<strong class="text-[11px]">' + inv.clientName + '</strong></div>' +
+          '<div class="grid grid-cols-2 text-[11px] leading-tight border border-black p-2 mb-1 bg-white">' +
+            '<div class="space-y-0.5">' +
+              '<div>客戶名稱：<strong class="text-xs">' + inv.clientName + '</strong></div>' +
               '<div>統一編號：<span class="font-mono">' + (c.taxId || '') + '</span></div>' +
               '<div>送貨地址：<span>' + (c.address || '') + '</span></div>' +
             '</div>' +
-            '<div class="pl-2">' +
+            '<div class="pl-2 space-y-0.5">' +
               '<div>聯 絡 人：<span>' + (c.contact || '') + '</span></div>' +
               '<div>聯絡電話：<span class="font-mono">' + (c.phone || '') + '</span></div>' +
               '<div>傳真號碼：<span class="font-mono">' + (c.fax || '') + '</span></div>' +
             '</div>' +
           '</div>' +
-          '<table class="invoice-table text-[10.5px] mb-1">' +
+          '<table class="invoice-table text-[10px] mb-1">' +
             '<thead>' +
               '<tr class="bg-gray-100 text-center font-bold">' +
                 '<th style="width: 45%;">品名規格 / 圖號</th>' +
@@ -1620,26 +1644,124 @@
             '</thead>' +
             '<tbody>' + tableRowsHtml + '</tbody>' +
           '</table>' +
-          '<div class="border border-black px-2 py-1 text-[11px] font-mono flex justify-between items-center mb-1">' +
+          '<div class="border border-black px-2 py-1 text-[10.5px] font-mono flex justify-between items-center mb-1">' +
             '<div>數量總計：<strong class="text-xs">' + (isLastPage ? (inv.totalQty || inv.qty) : '(續下頁)') + '</strong> PCS</div>' +
             '<div>合 &nbsp; 計：<span>' + (isLastPage ? inv.subtotal.toLocaleString() : '--') + '</span> 元</div>' +
             '<div>稅 &nbsp; 額：<span>' + (isLastPage ? inv.tax.toLocaleString() : '--') + '</span> 元</div>' +
             '<div>總 &nbsp; 計：<strong class="text-sm font-bold">' + (isLastPage ? inv.grandTotal.toLocaleString() : '--') + '</strong> 元</div>' +
           '</div>' +
-          '<div class="grid grid-cols-12 border border-black" style="height: 22mm;">' +
-            '<div class="col-span-7 p-1.5 border-r border-black flex flex-col justify-between text-[10.5px]">' +
-              '<div class="font-bold">備註：<span class="font-normal">' + (inv.notes || '') + '</span></div>' +
-              '<div class="text-[9px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
+          '<div class="grid grid-cols-12 border border-black" style="height: 16mm;">' +
+            '<div class="col-span-7 p-1 border-r border-black flex flex-col justify-between text-[10px]">' +
+              '<div><strong>備註：</strong><span class="font-normal">' + (inv.notes || '') + '</span></div>' +
+              '<div class="text-[8.5px] text-gray-500 font-sans">※ 收到貨品請點收確認，如有任何尺寸疑問請於 7 日內洽詢。</div>' +
             '</div>' +
-            '<div class="col-span-5 p-1.5 flex flex-col justify-between text-[10.5px]">' +
+            '<div class="col-span-5 p-1 flex flex-col justify-between text-[10px]">' +
               '<div class="font-bold">客戶簽章：</div>' +
-              '<div class="text-center text-[10px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
+              '<div class="text-center text-[9px] text-gray-400">( 請在此處簽名或蓋發票章 )</div>' +
             '</div>' +
           '</div>';
         printContainer.appendChild(pageDiv);
       }
 
       setTimeout(function() { window.print(); }, 200);
+    }
+
+    // ==============================================================
+    // ★ 現場師傅端 (含 2D PDF / 雲端圖面即時預覽與縮放) ★
+    // ==============================================================
+    function renderShopfloorView() {
+      const c = document.getElementById('shopfloor-content');
+      if (!c) return;
+      c.innerHTML = '';
+      if (!currentWorkerOrderId) {
+        c.innerHTML = '<div class="p-16 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800 font-bold">現場目前無在製工單</div>';
+        return;
+      }
+      const o = orders.find(function(x) { return String(x.id).trim() === String(currentWorkerOrderId).trim(); });
+      if (!o) return;
+
+      // 檢查是否綁定 Google Drive PDF 或圖片連結
+      let drawingViewerHtml = '';
+      if (o.drawingUrl) {
+        let driveEmbedUrl = o.drawingUrl;
+        if (driveEmbedUrl.indexOf('drive.google.com') !== -1 && driveEmbedUrl.indexOf('/view') !== -1) {
+          driveEmbedUrl = driveEmbedUrl.replace('/view', '/preview');
+        }
+        drawingViewerHtml = 
+          '<div class="space-y-2">' +
+            '<div class="flex justify-between items-center text-xs">' +
+              '<span class="text-cyan-400 font-bold flex items-center gap-1"><i class="ph-bold ph-file-pdf text-rose-400 text-sm"></i> 2D PDF 工程圖面</span>' +
+              '<a href="' + o.drawingUrl + '" target="_blank" class="px-3 py-1 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-300 border border-cyan-500/50 rounded-lg text-xs font-bold flex items-center gap-1">' +
+                '<i class="ph-bold ph-arrows-out"></i> 全螢幕放大查看圖面' +
+              '</a>' +
+            '</div>' +
+            '<div class="w-full h-80 sm:h-96 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">' +
+              '<iframe src="' + driveEmbedUrl + '" class="w-full h-full border-0" allow="autoplay"></iframe>' +
+            '</div>' +
+          '</div>';
+      } else {
+        drawingViewerHtml = 
+          '<div class="blueprint-grid rounded-xl p-8 text-center text-cyan-400 font-mono text-sm border border-slate-800">' +
+            '[ 尚未綁定 2D PDF 圖面連結 - 依工程圖紙施工 ]' +
+          '</div>';
+      }
+
+      c.innerHTML = 
+        '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">' +
+          '<div class="flex justify-between items-center border-b border-slate-800 pb-3">' +
+            '<div>' +
+              '<span class="text-cyan-400 font-mono font-bold text-xl">' + o.id + '</span>' +
+              '<h2 class="text-xl font-bold text-white mt-1">' + o.partName + '</h2>' +
+              '<div class="text-xs text-slate-400 mt-0.5">指定機台: <strong class="text-cyan-300 font-bold">' + o.machine + '</strong> | 目標: <strong class="text-white">' + o.targetQty + ' PCS</strong></div>' +
+            '</div>' +
+            '<span class="text-sm px-3 py-1 rounded-full font-bold bg-slate-800 text-cyan-300 border border-slate-700">' + o.status + '</span>' +
+          '</div>' +
+          drawingViewerHtml +
+          '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-300">' +
+            '<span class="text-amber-400 font-bold block mb-1">公差要求：</span>' + (o.notes || '依工程圖面規格施作。') +
+          '</div>' +
+          '<div class="grid grid-cols-2 gap-3 pt-2">' +
+            '<button onclick="workerQuickStatus(\'' + o.id + '\', \'加工中\')" class="py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500 rounded-xl font-bold">機台開始加工 (銑削中)</button>' +
+            '<button onclick="openCompletionModal(\'' + o.id + '\')" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl">完工報工 (同步雲端)</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    async function workerQuickStatus(id, st) {
+      const orderId = String(id).trim();
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_status", orderId: orderId, status: st }) });
+        fetchCloudData();
+      } catch (err) {
+        const o = orders.find(function(x) { return String(x.id).trim() === orderId; });
+        if (o) o.status = st;
+        renderShopfloorView(); renderOfficeBoard();
+      }
+    }
+
+    function populateWorkerOrderSelector() {
+      const s = document.getElementById('worker-order-selector');
+      if (!s) return;
+      s.innerHTML = '';
+      const list = orders.filter(function(o) { return !o.isArchived; });
+      if (list.length === 0) { s.innerHTML = '<option value="">目前無在製工單</option>'; currentWorkerOrderId = null; return; }
+      list.forEach(function(o) {
+        const opt = document.createElement('option');
+        opt.value = String(o.id).trim();
+        opt.innerText = o.id + ' - ' + o.partName + ' [' + o.status + ']';
+        if (String(o.id).trim() === String(currentWorkerOrderId).trim()) opt.selected = true;
+        s.appendChild(opt);
+      });
+      if (!currentWorkerOrderId || !list.some(function(o) { return String(o.id).trim() === String(currentWorkerOrderId).trim(); })) {
+        currentWorkerOrderId = String(list[0].id).trim();
+        s.value = currentWorkerOrderId;
+      }
+    }
+    function onWorkerSelectOrder(id) { currentWorkerOrderId = String(id).trim(); renderShopfloorView(); }
+
+    function openCompletionModal(id) {
+      document.getElementById('completion-form').dataset.orderId = String(id).trim();
+      openModal('completion-modal');
     }
 
     // ==============================================================
@@ -1732,7 +1854,7 @@
     }
 
     // ==============================================================
-    // ★ 工單與現場報工邏輯 ★
+    // ★ 工單與外包發放業務邏輯 ★
     // ==============================================================
     async function handleCreateOrder(e) {
       e.preventDefault();
@@ -1745,6 +1867,7 @@
         machine: document.getElementById('form-machine').value,
         targetQty: parseInt(document.getElementById('form-target-qty').value) || 10,
         dueDate: document.getElementById('form-due-date').value || new Date().toISOString().split('T')[0],
+        drawingUrl: document.getElementById('form-drawing-url').value.trim(),
         status: "待加工",
         statusTime: new Date().toLocaleString('zh-TW', { hour12: false }),
         notes: document.getElementById('form-notes').value || ""
@@ -1758,7 +1881,7 @@
         showNotification("工單已發布", "工單 " + orderNo + " 已同步儲存至 Google 雲端！");
       } catch (err) {
         orders.unshift(newOrder);
-        localStorage.setItem('zh_cnc_local_orders_v23', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v24', JSON.stringify(orders));
         closeModal('new-order-modal');
         document.getElementById('new-order-form').reset();
         renderOfficeBoard();
@@ -1790,7 +1913,7 @@
         if (o) {
           o.status = newStatus;
           o.completionData = { goodQty: goodQty, defectQty: defectQty, operator: operator };
-          localStorage.setItem('zh_cnc_local_orders_v23', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v24', JSON.stringify(orders));
         }
         closeModal('completion-modal');
         renderOfficeBoard();
@@ -1844,10 +1967,15 @@
           invoiceBtn = '<button onclick="quickCreateInvoiceFromOrder(\'' + o.id + '\')" class="px-2.5 py-1 bg-emerald-600/90 hover:bg-emerald-500 text-slate-950 font-black rounded-lg text-xs flex items-center gap-1 shadow"><i class="ph-bold ph-receipt"></i> 開銷貨單</button>';
         }
 
+        let drawingBadge = o.drawingUrl ? '<span class="text-[10px] bg-rose-950 text-rose-300 px-1.5 py-0.2 rounded border border-rose-800 font-bold">附2D圖面</span>' : '';
+
         card.innerHTML = 
           '<div class="flex justify-between items-start border-b border-slate-800 pb-2">' +
             '<div>' +
-              '<span class="font-mono text-cyan-400 font-bold text-sm">' + o.id + '</span>' +
+              '<div class="flex items-center gap-1.5">' +
+                '<span class="font-mono text-cyan-400 font-bold text-sm">' + o.id + '</span>' +
+                drawingBadge +
+              '</div>' +
               '<h3 class="font-bold text-white text-base mt-0.5">' + o.partName + '</h3>' +
               '<div class="text-xs text-slate-400"><i class="ph ph-buildings"></i> ' + o.customer + '</div>' +
             '</div>' +
@@ -1872,83 +2000,11 @@
       const o = orders.find(function(x) { return String(x.id).trim() === String(id).trim(); });
       if (o) {
         o.isArchived = !o.isArchived;
-        localStorage.setItem('zh_cnc_local_orders_v23', JSON.stringify(orders));
+        localStorage.setItem('zh_cnc_local_orders_v24', JSON.stringify(orders));
         renderOfficeBoard();
       }
     }
 
-    function populateWorkerOrderSelector() {
-      const s = document.getElementById('worker-order-selector');
-      if (!s) return;
-      s.innerHTML = '';
-      const list = orders.filter(function(o) { return !o.isArchived; });
-      if (list.length === 0) { s.innerHTML = '<option value="">目前無在製工單</option>'; currentWorkerOrderId = null; return; }
-      list.forEach(function(o) {
-        const opt = document.createElement('option');
-        opt.value = String(o.id).trim();
-        opt.innerText = o.id + ' - ' + o.partName + ' [' + o.status + ']';
-        if (String(o.id).trim() === String(currentWorkerOrderId).trim()) opt.selected = true;
-        s.appendChild(opt);
-      });
-      if (!currentWorkerOrderId || !list.some(function(o) { return String(o.id).trim() === String(currentWorkerOrderId).trim(); })) {
-        currentWorkerOrderId = String(list[0].id).trim();
-        s.value = currentWorkerOrderId;
-      }
-    }
-    function onWorkerSelectOrder(id) { currentWorkerOrderId = String(id).trim(); renderShopfloorView(); }
-
-    function renderShopfloorView() {
-      const c = document.getElementById('shopfloor-content');
-      if (!c) return;
-      c.innerHTML = '';
-      if (!currentWorkerOrderId) {
-        c.innerHTML = '<div class="p-16 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800 font-bold">現場目前無在製工單</div>';
-        return;
-      }
-      const o = orders.find(function(x) { return String(x.id).trim() === String(currentWorkerOrderId).trim(); });
-      if (!o) return;
-      c.innerHTML = 
-        '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">' +
-          '<div class="flex justify-between items-center border-b border-slate-800 pb-3">' +
-            '<div>' +
-              '<span class="text-cyan-400 font-mono font-bold text-xl">' + o.id + '</span>' +
-              '<h2 class="text-xl font-bold text-white mt-1">' + o.partName + '</h2>' +
-              '<div class="text-xs text-slate-400 mt-0.5">指定機台: <strong class="text-cyan-300 font-bold">' + o.machine + '</strong> | 目標: <strong class="text-white">' + o.targetQty + ' PCS</strong></div>' +
-            '</div>' +
-            '<span class="text-sm px-3 py-1 rounded-full font-bold bg-slate-800 text-cyan-300 border border-slate-700">' + o.status + '</span>' +
-          '</div>' +
-          '<div class="blueprint-grid rounded-xl p-8 text-center text-cyan-400 font-mono text-sm border border-slate-800">' +
-            '[ 2D 精密工程圖面尺寸視圖 - 尺寸公差正常 ]' +
-          '</div>' +
-          '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-300">' +
-            '<span class="text-amber-400 font-bold block mb-1">公差要求：</span>' + (o.notes || '依工程圖面規格施作。') +
-          '</div>' +
-          '<div class="grid grid-cols-2 gap-3 pt-2">' +
-            '<button onclick="workerQuickStatus(\'' + o.id + '\', \'加工中\')" class="py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500 rounded-xl font-bold">機台開始加工 (銑削中)</button>' +
-            '<button onclick="openCompletionModal(\'' + o.id + '\')" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl">完工報工 (同步雲端)</button>' +
-          '</div>' +
-        '</div>';
-    }
-
-    async function workerQuickStatus(id, st) {
-      const orderId = String(id).trim();
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_status", orderId: orderId, status: st }) });
-        fetchCloudData();
-      } catch (err) {
-        const o = orders.find(function(x) { return String(x.id).trim() === orderId; });
-        if (o) o.status = st;
-        renderShopfloorView(); renderOfficeBoard();
-      }
-    }
-    function openCompletionModal(id) {
-      document.getElementById('completion-form').dataset.orderId = String(id).trim();
-      openModal('completion-modal');
-    }
-
-    // ==============================================================
-    // ★ 客戶庫與外包發放業務邏輯 ★
-    // ==============================================================
     function openAddClientModal() {
       document.getElementById('client-edit-id').value = "";
       document.getElementById('client-code').value = "C" + String(clients.length + 1).padStart(3, '0');
@@ -1975,7 +2031,7 @@
         payment: document.getElementById('client-payment').value.trim()
       };
       clients.push(clientData);
-      localStorage.setItem('zh_cnc_clients_v23', JSON.stringify(clients));
+      localStorage.setItem('zh_cnc_clients_v24', JSON.stringify(clients));
       closeModal('add-client-modal');
       refreshCustomerSelectDropdown();
       refreshBoardClientFilter();
@@ -2024,7 +2080,7 @@
       const phone = document.getElementById('vendor-phone').value.trim();
 
       vendors.push({ name: name, mainCat: mainCat, subtag: subtag, contact: contact, phone: phone });
-      localStorage.setItem('zh_cnc_vendors_v23', JSON.stringify(vendors));
+      localStorage.setItem('zh_cnc_vendors_v24', JSON.stringify(vendors));
       closeModal('add-vendor-modal');
       renderOutsourceBoard();
       filterOutsourceVendorsBySubtag(document.getElementById('outsource-main-cat').value, document.getElementById('outsource-subtag').value);
@@ -2078,7 +2134,7 @@
         if (o) {
           o.status = "外包中";
           o.outsourceData = outData;
-          localStorage.setItem('zh_cnc_local_orders_v23', JSON.stringify(orders));
+          localStorage.setItem('zh_cnc_local_orders_v24', JSON.stringify(orders));
         }
         closeModal('dispatch-outsource-modal');
         renderOfficeBoard();
